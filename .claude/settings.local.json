@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:retro-games.readthedocs.io)",
+      "WebFetch(domain:raw.githubusercontent.com)"
+    ]
+  }
+}

@@ -1,0 +1,185 @@
+"""High score entry screen with virtual keyboard."""
+
+from retro_console import settings
+from retro_console.screens.base import Screen
+from retro_console.game_manager import save_high_score
+
+
+# Virtual keyboard layout
+KEYBOARD_ROWS = [
+    "ABCDEFGHIJ",
+    "KLMNOPQRST",
+    "UVWXYZ<-OK",
+]
+
+
+class HighScoreScreen(Screen):
+    """Screen for entering initials for a high score."""
+
+    def __init__(self, app):
+        super().__init__(app)
+        self.game = app.pending_high_score["game"]
+        self.score = app.pending_high_score["score"]
+        self.initials = ""
+        self.cursor_row = 0
+        self.cursor_col = 0
+        self.forbidden_words = settings.get_forbidden_words()
+
+    def draw(self):
+        """Draw the high score entry screen."""
+        # Title
+        self.center_text(self.terminal.bold + "NEW HIGH SCORE!" + self.terminal.normal, 2)
+
+        # Game and score info
+        self.center_text(f"Game: {self.game.name}", 5)
+        self.center_text(f"Score: {self.score}", 6)
+
+        # Current initials
+        initials_display = self.initials + "_" * (3 - len(self.initials))
+        self.center_text("Enter your initials:", 9)
+        self.center_text(self.terminal.bold + f"[ {initials_display} ]" + self.terminal.normal, 11)
+
+        # Virtual keyboard
+        kb_start_y = 14
+        self._draw_keyboard(kb_start_y)
+
+        # Instructions
+        self.center_text("[Joystick] Move  [A] Select", self.height - 2)
+
+    def _draw_keyboard(self, start_y):
+        """Draw the virtual keyboard."""
+        for row_idx, row in enumerate(KEYBOARD_ROWS):
+            row_str = ""
+            for col_idx, char in enumerate(row):
+                if row_idx == self.cursor_row and col_idx == self.cursor_col:
+                    # Highlight current selection
+                    if char == "<":
+                        row_str += self.terminal.reverse + "<-" + self.terminal.normal + " "
+                    elif char == "-":
+                        continue  # Part of backspace
+                    elif char == "O" and col_idx > 0 and row[col_idx - 1] == "-":
+                        row_str += self.terminal.reverse + "OK" + self.terminal.normal + " "
+                    elif char == "K" and col_idx > 0 and row[col_idx - 1] == "O":
+                        continue  # Part of OK
+                    else:
+                        row_str += self.terminal.reverse + f" {char} " + self.terminal.normal + " "
+                else:
+                    if char == "<":
+                        row_str += "<- "
+                    elif char == "-":
+                        continue
+                    elif char == "O" and col_idx > 0 and row[col_idx - 1] == "-":
+                        row_str += "OK "
+                    elif char == "K" and col_idx > 0 and row[col_idx - 1] == "O":
+                        continue
+                    else:
+                        row_str += f" {char}  "
+
+            self.center_text(row_str, start_y + row_idx * 2)
+
+    def _get_current_char(self):
+        """Get the character at the current cursor position."""
+        row = KEYBOARD_ROWS[self.cursor_row]
+        char = row[self.cursor_col]
+
+        # Handle special keys
+        if char == "<":
+            return "BACKSPACE"
+        elif char == "-":
+            return "BACKSPACE"
+        elif char == "O" and self.cursor_col > 0 and row[self.cursor_col - 1] == "-":
+            return "OK"
+        elif char == "K" and self.cursor_col > 0 and row[self.cursor_col - 1] == "O":
+            return "OK"
+        else:
+            return char
+
+    def handle_input(self):
+        """Handle input for initial entry."""
+        while True:
+            raw_key, logical_key = self.input_handler.read_key()
+
+            if logical_key == "UP":
+                if self.cursor_row > 0:
+                    self.cursor_row -= 1
+                    self._adjust_cursor_col()
+                    self.clear()
+                    self.draw()
+
+            elif logical_key == "DOWN":
+                if self.cursor_row < len(KEYBOARD_ROWS) - 1:
+                    self.cursor_row += 1
+                    self._adjust_cursor_col()
+                    self.clear()
+                    self.draw()
+
+            elif logical_key == "LEFT":
+                if self.cursor_col > 0:
+                    new_col = self.cursor_col - 1
+                    # Skip over second part of multi-char keys
+                    char = KEYBOARD_ROWS[self.cursor_row][new_col]
+                    if char in "-K":
+                        new_col -= 1
+                    # Only move if still in bounds
+                    if new_col >= 0:
+                        self.cursor_col = new_col
+                        self.clear()
+                        self.draw()
+
+            elif logical_key == "RIGHT":
+                row_len = len(KEYBOARD_ROWS[self.cursor_row])
+                if self.cursor_col < row_len - 1:
+                    new_col = self.cursor_col + 1
+                    # Skip over second part of multi-char keys
+                    char = KEYBOARD_ROWS[self.cursor_row][new_col]
+                    if char in "-K":
+                        new_col += 1
+                    # Only move if still in bounds
+                    if new_col < row_len:
+                        self.cursor_col = new_col
+                        self.clear()
+                        self.draw()
+
+            elif logical_key == "A":
+                char = self._get_current_char()
+
+                if char == "BACKSPACE":
+                    if self.initials:
+                        self.initials = self.initials[:-1]
+                        self.clear()
+                        self.draw()
+
+                elif char == "OK":
+                    if len(self.initials) == 3:
+                        if self._is_valid_initials():
+                            save_high_score(self.game, self.initials, self.score, self.app.session)
+                            self.app.pending_high_score = None
+                            self.app.refresh_games()
+                            return "game_select"
+                        else:
+                            # Show error for forbidden word
+                            self.center_text(
+                                self.terminal.red + "Invalid initials!" + self.terminal.normal,
+                                self.height - 4
+                            )
+
+                else:
+                    # Regular letter
+                    if len(self.initials) < 3:
+                        self.initials += char
+                        self.clear()
+                        self.draw()
+
+    def _adjust_cursor_col(self):
+        """Adjust cursor column when changing rows."""
+        row_len = len(KEYBOARD_ROWS[self.cursor_row])
+        if self.cursor_col >= row_len:
+            self.cursor_col = row_len - 1
+        # Avoid landing on second part of multi-char keys
+        char = KEYBOARD_ROWS[self.cursor_row][self.cursor_col]
+        if char in "-K":
+            self.cursor_col -= 1
+
+    def _is_valid_initials(self):
+        """Check if initials are valid (not a forbidden word)."""
+        return self.initials.upper() not in self.forbidden_words

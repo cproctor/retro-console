@@ -1,0 +1,43 @@
+# Retro Console Configuration Example
+# Copy this to retro_console.toml and customize
+
+# Screen dimensions
+screen_width = 80
+screen_height = 24
+
+# Debug key - press during startup to enter debug mode
+debug_key = "KEY_F12"
+
+# Maximum game duration in seconds (comment out for no limit)
+# max_game_duration = 300
+
+# Directory containing game packages
+games_dir = "games"
+
+# Path to forbidden words file (for high score initials)
+# forbidden_words_file = "forbidden_words.txt"
+
+# Timeout for game selection screen (seconds)
+game_select_timeout = 60
+
+# Database path
+database_path = "retro_console.db"
+
+# Key mapping - customize for your joystick/button hardware
+[key_mapping]
+UP = "KEY_UP"
+UPLEFT = "KEY_HOME"
+LEFT = "KEY_LEFT"
+DOWNLEFT = "KEY_END"
+DOWN = "KEY_DOWN"
+DOWNRIGHT = "KEY_PGDOWN"
+RIGHT = "KEY_RIGHT"
+UPRIGHT = "KEY_PGUP"
+A = "z"
+B = "x"
+C = "c"
+D = "v"
+E = "a"
+F = "s"
+G = "d"
+H = "f"
