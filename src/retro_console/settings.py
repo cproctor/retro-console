@@ -26,13 +26,9 @@ DATABASE_PATH = Path("retro_console.db")
 KEY_MAPPING = {
     # Joystick directions
     "UP": "KEY_UP",
-    "UPLEFT": "KEY_HOME",
     "LEFT": "KEY_LEFT",
-    "DOWNLEFT": "KEY_END",
     "DOWN": "KEY_DOWN",
-    "DOWNRIGHT": "KEY_PGDOWN",
     "RIGHT": "KEY_RIGHT",
-    "UPRIGHT": "KEY_PGUP",
     # Action buttons
     "A": "z",
     "B": "x",
