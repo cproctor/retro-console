@@ -7,7 +7,7 @@ SCREEN_WIDTH = 80
 SCREEN_HEIGHT = 24
 
 # Debug settings
-DEBUG_KEY = "KEY_F12"
+DEBUG_KEY = "z"
 
 # Game settings
 MAX_GAME_DURATION = None  # Set to number of seconds, or None for no limit

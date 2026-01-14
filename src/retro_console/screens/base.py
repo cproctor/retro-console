@@ -1,5 +1,7 @@
 """Base screen class for the retro console."""
 
+import os
+
 from retro_console import settings
 
 
@@ -20,14 +22,25 @@ class Screen:
         return settings.SCREEN_HEIGHT
 
     @property
+    def terminal_size(self):
+        """Get current terminal size, with fallback."""
+        try:
+            size = os.get_terminal_size()
+            return size.columns, size.lines
+        except OSError:
+            return self.terminal.width, self.terminal.height
+
+    @property
     def offset_x(self):
         """Horizontal offset to center content on terminal."""
-        return (self.terminal.width - self.width) // 2
+        term_width, _ = self.terminal_size
+        return max(0, (term_width - self.width) // 2)
 
     @property
     def offset_y(self):
         """Vertical offset to center content on terminal."""
-        return (self.terminal.height - self.height) // 2
+        _, term_height = self.terminal_size
+        return max(0, (term_height - self.height) // 2)
 
     def move(self, x, y):
         """Return terminal escape sequence to move cursor to (x, y) with centering offset."""

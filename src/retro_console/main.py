@@ -1,6 +1,7 @@
 """Main entry point for the retro console."""
 
 import os
+import subprocess
 import sys
 
 from blessed import Terminal
@@ -28,6 +29,29 @@ class RetroConsoleApp:
         self.validation_results = []
         self.pending_high_score = None
         self.debug_mode = False
+
+    def pull_latest(self):
+        """Pull latest changes from git repository.
+
+        Logs the result but does not crash on error (e.g., no network).
+        """
+        print("Pulling latest changes...")
+        try:
+            result = subprocess.run(
+                ["git", "pull"],
+                capture_output=True,
+                text=True,
+                timeout=30
+            )
+            if result.returncode == 0:
+                output = result.stdout.strip()
+                print(f"Git pull: {output}")
+            else:
+                print(f"Git pull failed: {result.stderr.strip()}")
+        except subprocess.TimeoutExpired:
+            print("Git pull timed out")
+        except Exception as e:
+            print(f"Git pull error: {e}")
 
     def check_terminal_size(self):
         """Check if terminal is large enough."""
@@ -58,6 +82,9 @@ class RetroConsoleApp:
             self.check_terminal_size()
         except SetupError as e:
             errors.append(str(e))
+
+        # Pull latest changes before discovering games
+        self.pull_latest()
 
         # Discover and validate games
         print("Discovering games...")
