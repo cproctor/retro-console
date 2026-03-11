@@ -14,13 +14,13 @@ A retro-style video game console menu system for the terminal. Built with Python
 ## Installation
 
 ```bash
-poetry install
+uv sync
 ```
 
 ## Usage
 
 ```bash
-poetry run retro-console
+uv run retro-console
 ```
 
 ### Controls
