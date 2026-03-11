@@ -2,11 +2,14 @@
 name = "retro-console"
 version = "0.1.0"
 description = "A retro-style video game console menu system for the terminal"
-authors = [
-    {name = "Chris Proctor", email = "chris@chrisproctor.net"}
-]
-readme = "README.md"
+authors = [{ name = "Chris Proctor", email = "chris@chrisproctor.net" }]
 requires-python = ">=3.13"
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
 dependencies = [
     "blessed>=1.20.0",
     "sqlalchemy>=2.0.0",
@@ -17,8 +20,14 @@ dependencies = [
 retro-console = "retro_console.main:main"
 
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.poetry]
-packages = [{include = "retro_console", from = "src"}]
+[tool.hatch.build.targets.sdist]
+include = ["src/retro_console"]
+
+[tool.hatch.build.targets.wheel]
+include = ["src/retro_console"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src/retro_console" = "retro_console"
