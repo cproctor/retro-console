@@ -1,4 +1,3 @@
-import json
 from retro.game import Game
 from beast.board import Board
 
@@ -9,11 +8,9 @@ NUM_BEASTS = 10
 def main():
     board = Board(WIDTH, HEIGHT, num_beasts=NUM_BEASTS)
     state = {"score": 0}
-    game = Game(board.get_agents(), state, board_size=(WIDTH, HEIGHT))
+    game = Game(board.get_agents(), state, board_size=(WIDTH, HEIGHT), dump_state="result.json")
     game.num_beasts = NUM_BEASTS
     game.play()
-    with open("result.json", "w") as fh:
-        json.dump(game.state, fh)
 
 if __name__ == '__main__':
     main()

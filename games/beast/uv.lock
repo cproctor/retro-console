@@ -19,7 +19,7 @@ dependencies = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "retro-games", specifier = ">=1.0.0" }]
+requires-dist = [{ name = "retro-games", specifier = "==1.2.0" }]
 
 [[package]]
 name = "blessed"
@@ -48,14 +48,14 @@ wheels = [
 
 [[package]]
 name = "retro-games"
-version = "1.1.3"
+version = "1.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "blessed" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b3/2e/7f587ccf6ae5f109d786bac2a42fbacb9dfe65396175f5467cb24d8a9318/retro_games-1.1.3.tar.gz", hash = "sha256:4f91ff725e551820aa4e30c12c0264e2da41967ed34252122b7136bc2a8ed311", size = 14941 }
+sdist = { url = "https://files.pythonhosted.org/packages/f3/f9/33efcb41c1b7c7d890fe7c179dee702d6ca72754c0b0bf4fbe751eff609c/retro_games-1.2.0.tar.gz", hash = "sha256:669b9fe3f1454470628b2b0d895fcc645c5d90ddc46563d20577ac2f5f66519c", size = 15137 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6d/f1/e84278104a29bf875f0f1a9d20608dded5d043fc8f8ca2fd9acd9f421392/retro_games-1.1.3-py3-none-any.whl", hash = "sha256:4bdd27241b5cb3ee72e69a042d301ff58df2a2ade7e3c29400a538fa54e30148", size = 20774 },
+    { url = "https://files.pythonhosted.org/packages/be/b5/545a912f2a8b9107f97dfd3998f0015f8b3ac7052ba6c8b9effef2c50238/retro_games-1.2.0-py3-none-any.whl", hash = "sha256:d9d805aa15db71bcbef71da76be18f1f2b71884125b8413b0577636e038b708a", size = 20972 },
 ]
 
 [[package]]

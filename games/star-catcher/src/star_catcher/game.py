@@ -12,8 +12,6 @@ This game demonstrates how to create Agents in the retro-games framework:
 - StarSpawner: An invisible agent that creates new stars
 """
 
-import json
-from pathlib import Path
 from random import randint
 
 from retro.game import Game
@@ -203,18 +201,11 @@ def main():
         agents=[basket, spawner],
         state=initial_state,
         board_size=(WIDTH, HEIGHT),
+        dump_state="result.json",
     )
 
     # Play the game (this blocks until the game ends)
     game.play()
-
-    # After the game ends, save the score to a file
-    # The retro-console reads this file to record high scores
-    final_score = game.state["score"]
-
-    result_path = Path(__file__).parent.parent.parent / "result.json"
-    with open(result_path, "w") as f:
-        json.dump({"score": final_score}, f)
 
 
 # This runs when you execute the file directly

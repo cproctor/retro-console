@@ -1,10 +1,11 @@
+import os
 from beast.helpers import add, get_occupant
 
 direction_vectors = {
-    "KEY_RIGHT": (1, 0),
-    "KEY_UP": (0, -1),
-    "KEY_LEFT": (-1, 0),
-    "KEY_DOWN": (0, 1),
+    os.environ.get("RETRO_KEY_RIGHT", "KEY_RIGHT"): (1, 0),
+    os.environ.get("RETRO_KEY_UP", "KEY_UP"): (0, -1),
+    os.environ.get("RETRO_KEY_LEFT", "KEY_LEFT"): (-1, 0),
+    os.environ.get("RETRO_KEY_DOWN", "KEY_DOWN"): (0, 1),
 }
 
 class Player:
@@ -16,8 +17,9 @@ class Player:
         self.position = position
 
     def handle_keystroke(self, keystroke, game):
-        if keystroke.name in direction_vectors:
-            vector = direction_vectors[keystroke.name]
+        key = keystroke.name or str(keystroke)
+        if key in direction_vectors:
+            vector = direction_vectors[key]
             self.try_to_move(vector, game)
 
     def try_to_move(self, vector, game):
