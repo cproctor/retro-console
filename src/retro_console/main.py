@@ -97,9 +97,9 @@ class RetroConsoleApp:
             print("No valid games found")
 
         # Check for debug key during setup
-        print(f"Press {settings.DEBUG_KEY} within 2 seconds to enter debug mode...")
+        print("Press any key within 2 seconds to enter debug mode...")
         raw_key, _ = self.input_handler.read_key(timeout=2)
-        if raw_key and self.input_handler.is_debug_key(raw_key):
+        if raw_key:
             self.debug_mode = True
 
         if errors:
