@@ -1,6 +1,7 @@
 """Game validation, setup, and execution."""
 
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -171,10 +172,14 @@ def run_game(game, session=None):
     # Run the game
     try:
         timeout = settings.MAX_GAME_DURATION
+        env = os.environ.copy()
+        for logical, physical in settings.KEY_MAPPING.items():
+            env[f"RETRO_KEY_{logical}"] = physical
         result = subprocess.run(
             ["uv", "run", "play"],
             cwd=game_path,
             timeout=timeout,
+            env=env,
         )
     except subprocess.TimeoutExpired:
         # Game timed out - still try to read results
