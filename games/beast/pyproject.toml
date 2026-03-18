@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Catch falling stars before they hit the ground!"
 requires-python = ">=3.10,<4.0"
 dependencies = [
-    "retro-games==1.2.0",
+    "retro-games==2.0.0",
 ]
 
 [project.scripts]
