@@ -6,7 +6,7 @@ Wants=antimicrox.service
 [Service]
 Type=simple
 WorkingDirectory=/opt/retro-console
-ExecStart=xterm -fullscreen -e "uv run retro-console"
+ExecStart=/usr/bin/xterm -fullscreen -bg black -fg white -e "/home/%u/.local/bin/uv run retro-console"
 Restart=always
 RestartSec=2
 
