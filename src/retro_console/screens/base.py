@@ -69,7 +69,7 @@ class Screen:
 
     def center_text(self, text, y=None):
         """Print text centered horizontally."""
-        x = (self.width - len(text)) // 2
+        x = (self.width - self.terminal.length(text)) // 2
         if y is not None:
             print(self.move(x, y) + text)
         else:
