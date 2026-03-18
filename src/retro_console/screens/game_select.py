@@ -25,8 +25,15 @@ class GameSelectScreen(Screen):
         self.draw_box(0, 0, list_width, self.height, "GAMES")
         self._draw_game_list(1, 1, list_width - 2)
 
+        # Reset terminal state before drawing details panel (clears any reverse from game list)
+        print(self.terminal.normal, end='', flush=True)
+
         # Draw details panel
-        self.draw_box(list_width, 0, detail_width, self.height, "DETAILS")
+        detail_title = self.games[self.selected_index].name if self.games else "DETAILS"
+        max_title_len = detail_width - 4
+        if len(detail_title) > max_title_len:
+            detail_title = detail_title[:max_title_len - 1] + "…"
+        self.draw_box(list_width, 0, detail_width, self.height, detail_title)
         self._draw_game_details(list_width + 1, 1, detail_width - 2)
 
     def _draw_game_list(self, x, y, width):
@@ -56,7 +63,7 @@ class GameSelectScreen(Screen):
                 # Highlight selected game
                 line = self.terminal.reverse + "> " + name.ljust(width - 2) + self.terminal.normal
             else:
-                line = "  " + name
+                line = self.terminal.normal + "  " + name
 
             print(self.move(x, y + i + 1) + line[:width])
 
@@ -73,9 +80,10 @@ class GameSelectScreen(Screen):
 
         game = self.games[self.selected_index]
         line = y + 1
+        t = self.terminal
 
         # Game name
-        print(self.move(x, line) + self.terminal.bold + game.name + self.terminal.normal)
+        print(self.move(x, line) + t.bold + game.name + t.normal)
         line += 2
 
         # Author
@@ -95,7 +103,7 @@ class GameSelectScreen(Screen):
         line += 2
 
         # High scores
-        print(self.move(x, line) + self.terminal.underline + "HIGH SCORES" + self.terminal.normal)
+        print(self.move(x, line) + t.underline + "HIGH SCORES" + t.normal)
         line += 1
 
         top_scores = game.get_top_scores(10)
@@ -109,8 +117,7 @@ class GameSelectScreen(Screen):
             line += 1
 
         # Instructions at bottom
-        instructions = "[A] Play  [UP/DOWN] Select"
-        print(self.move(x, self.height - 2) + instructions)
+        print(self.move(x, self.height - 2) + "[A] Play  [UP/DOWN] Select")
 
     def _wrap_text(self, text, width):
         """Simple word wrapping."""
