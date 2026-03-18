@@ -173,6 +173,8 @@ def run_game(game, session=None):
     try:
         timeout = settings.MAX_GAME_DURATION
         env = os.environ.copy()
+        env.pop("VIRTUAL_ENV", None)
+        env.pop("VIRTUAL_ENV_PROMPT", None)
         for logical, physical in settings.KEY_MAPPING.items():
             env[f"RETRO_KEY_{logical}"] = physical
         result = subprocess.run(

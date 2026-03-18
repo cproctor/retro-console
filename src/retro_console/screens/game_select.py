@@ -176,8 +176,8 @@ class GameSelectScreen(Screen):
 
         success, score = run_game(game, self.app.session)
 
-        # Restore terminal state after subprocess
-        print(self.terminal.normal)
+        # Restore terminal state after subprocess (game's blessed context emits show-cursor on exit)
+        print(self.terminal.normal + self.terminal.hide_cursor, end='', flush=True)
         print(self.terminal.home + self.terminal.clear)
 
         # Refresh game data from database
