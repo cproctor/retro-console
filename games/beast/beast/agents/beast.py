@@ -1,17 +1,19 @@
 from beast.helpers import add, distance, get_occupant
-from random import random, choice
+from random import uniform, choice
+
 
 class Beast:
     """Represents a beast, coming after the player.
     """
     character = "H"
     color = "red"
-    probability_of_moving = 0.03
-    probability_of_random_move = 0.2
     deadly = True
 
-    def __init__(self, position):
+    def __init__(self, position, average_turns_between_moves=33, probability_of_random_move=0.2):
         self.position = position
+        self.average_turns_between_moves = average_turns_between_moves
+        self.probability_of_random_move = probability_of_random_move
+        self.energy = 0.0
 
     def handle_push(self, vector, game):
         future_position = add(self.position, vector)
@@ -19,51 +21,44 @@ class Beast:
         obstacle = get_occupant(game, future_position)
         if obstacle or not on_board:
             self.die(game)
-            game.state["score"] += game.state["level"]
             return True
         else:
             return False
 
     def play_turn(self, game):
-        if self.should_move():
-            possible_moves = []
-            for position in self.get_adjacent_positions():
-                if game.is_empty(position) and game.on_board(position):
-                    possible_moves.append(position)
+        self.energy += uniform(0, 2 / self.average_turns_between_moves)
+        if self.energy >= 1.0:
+            self.energy -= 1.0
+            possible_moves = [
+                pos for pos in self.get_adjacent_positions()
+                if game.is_empty(pos) and game.on_board(pos)
+            ]
             if possible_moves:
-                if self.should_move_randomly():
+                if uniform(0, 1) < self.probability_of_random_move:
                     self.position = choice(possible_moves)
                 else:
                     self.position = self.choose_best_move(possible_moves, game)
             player = game.get_agent_by_name("player")
             if player.position == self.position:
-                player.die()
+                player.die(game)
 
     def get_adjacent_positions(self):
-        """Returns a list of all adjacent positions, including diagonals
-        """
-        positions = []
-        for i in [-1, 0, 1]:
-            for j in [-1, 0, 1]:
-                if i or j:
-                    positions.append(add(self.position, (i, j)))
-        return positions
-
-    def should_move(self):
-        return random() < self.probability_of_moving
-
-    def should_move_randomly(self):
-        return random() < self.probability_of_random_move
+        """Returns a list of all adjacent positions, including diagonals."""
+        return [
+            add(self.position, (i, j))
+            for i in [-1, 0, 1]
+            for j in [-1, 0, 1]
+            if i or j
+        ]
 
     def choose_best_move(self, possible_moves, game):
         player = game.get_agent_by_name("player")
         move_distances = [[distance(player.position, move), move] for move in possible_moves]
-        shortest_distance, best_move = sorted(move_distances)[0]
+        _, best_move = sorted(move_distances)[0]
         return best_move
 
     def die(self, game):
         game.remove_agent(self)
-        game.num_beasts -= 1
-        if game.num_beasts == 0:
-            game.state["message"] = "You win!"
-            game.end()
+        game.state["score"] += game.state["level"]
+        manager = game.get_agent_by_name("manager")
+        manager.check_level_complete(game)

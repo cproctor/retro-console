@@ -3,48 +3,33 @@ from beast.agents.player import Player
 from beast.agents.beast import Beast
 from beast.agents.block import Block
 
+
 class Board:
-    """The Board creates the agents needed at the beginning of the game, 
-    and assigns them all their positions. Board itself is not an agent, 
-    and has no role once the game starts.
-    """
-    def __init__(self, width, height, block_density=0.3, num_beasts=10):
+    """Creates agents and assigns them positions. Owned by the Manager."""
+
+    def __init__(self, width, height, block_density=0.3):
         self.width = width
         self.height = height
-        self.block_density = block_density
         self.num_blocks = round(width * height * block_density)
-        self.num_empty_spaces = width * height- self.num_blocks
-        self.num_beasts = num_beasts
-        self.validate()
 
-    def validate(self):
-        """Checks that the inputs are valid.
-        """
-        if self.block_density < 0 or self.block_density > 1:
-            raise ValueError("block density must be between 0 and 1.")
-        if self.num_empty_spaces < self.num_beasts + 1:
-            raise ValueError("Not enough space on the board.")
+    def get_initial_agents(self, num_beasts, color, beast_params):
+        """Returns (player, beasts, blocks) for the first level."""
+        positions = self._shuffled_positions()
+        player = Player(positions[0])
+        beasts = [Beast(pos, **beast_params) for pos in positions[1:num_beasts + 1]]
+        blocks = [Block(pos, color=color) for pos in positions[num_beasts + 1:num_beasts + 1 + self.num_blocks]]
+        return player, beasts, blocks
 
-    def get_agents(self):
-        """Returns a list of agents, all initialized in their starting positions.
-        """
-        positions = self.get_all_positions()
+    def get_level_agents(self, num_beasts, color, beast_params, exclude_positions):
+        """Returns (beasts, blocks) for a level transition, avoiding exclude_positions."""
+        positions = self._shuffled_positions(exclude=exclude_positions)
+        beasts = [Beast(pos, **beast_params) for pos in positions[:num_beasts]]
+        blocks = [Block(pos, color=color) for pos in positions[num_beasts:num_beasts + self.num_blocks]]
+        return beasts, blocks
+
+    def _shuffled_positions(self, exclude=None):
+        positions = [(x, y) for x in range(self.width) for y in range(self.height)]
+        if exclude:
+            positions = [p for p in positions if p not in exclude]
         shuffle(positions)
-
-        player_position = positions[0]
-        beast_positions = positions[1:self.num_beasts + 1]
-        block_positions = positions[-self.num_blocks:]
-
-        player = [Player(player_position)]
-        beasts = [Beast(pos) for pos in beast_positions]
-        blocks = [Block(pos) for pos in block_positions]
-        return player + beasts + blocks
-
-    def get_all_positions(self):
-        """Returns a list of all positions which are not on the edge of the board
-        """
-        positions = []
-        for i in range(self.width):
-            for j in range(self.height):
-                positions.append((i, j))
         return positions

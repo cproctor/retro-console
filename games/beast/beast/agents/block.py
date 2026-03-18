@@ -4,11 +4,12 @@ class Block:
     """Represents a static block. It just sits there.
     """
     character = "█"
-    color = "green4"
     deadly = False
 
-    def __init__(self, position):
+    def __init__(self, position, color="green4"):
+        self.color = color
         self.position = position
+
 
     def handle_push(self, vector, game):
         """Responds to a push in the direction of vector. 
