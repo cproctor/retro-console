@@ -2,6 +2,7 @@
 Description=Retro Console
 After=graphical-session.target antimicrox.service
 Wants=antimicrox.service
+StartLimitIntervalSec=0
 
 [Service]
 Type=simple
