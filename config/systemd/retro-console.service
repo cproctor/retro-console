@@ -5,6 +5,7 @@ Wants=antimicrox.service
 
 [Service]
 Type=simple
+Environment=DISPLAY=:0
 WorkingDirectory=/opt/retro-console
 ExecStart=/usr/bin/xterm -u8 -fa 'Monospace' -fs 14 -fullscreen -bg black -fg white -e "/home/%u/.local/bin/uv run retro-console"
 Restart=always
