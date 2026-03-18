@@ -172,7 +172,7 @@ class RetroConsoleApp:
                 if current_screen == "splash":
                     screen = SplashScreen(self)
                 elif current_screen == "game_select":
-                    screen = GameSelectScreen(self)
+                    screen = GameSelectScreen(self, selected_index=getattr(self, "selected_game_index", 0))
                 elif current_screen == "high_score":
                     screen = HighScoreScreen(self)
                 else:

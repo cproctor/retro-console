@@ -183,6 +183,7 @@ class GameSelectScreen(Screen):
         # Refresh game data from database
         self.app.refresh_games()
         self.games = self.app.games
+        self.app.selected_game_index = self.selected_index
 
         if score is not None and game.is_high_score(score):
             # Store for high score entry
