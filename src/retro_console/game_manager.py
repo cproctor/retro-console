@@ -87,10 +87,10 @@ def validate_game(game_path):
 
 
 def install_game(game_path):
-    """Run poetry install for a game. Returns (success, output)."""
+    """Install a game's dependencies. Returns (success, output)."""
     try:
         result = subprocess.run(
-            ["poetry", "install"],
+            ["uv", "sync"],
             cwd=game_path,
             capture_output=True,
             text=True,
@@ -172,7 +172,7 @@ def run_game(game, session=None):
     try:
         timeout = settings.MAX_GAME_DURATION
         result = subprocess.run(
-            ["poetry", "run", "play"],
+            ["uv", "run", "play"],
             cwd=game_path,
             timeout=timeout,
         )
