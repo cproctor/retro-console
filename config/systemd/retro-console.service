@@ -8,8 +8,8 @@ StartLimitIntervalSec=0
 Type=simple
 Environment=DISPLAY=:0
 Environment=XAUTHORITY=/home/%u/.Xauthority
-Environment=LANG=en_GB.utf8
-Environment=LC_ALL=en_GB.utf8
+Environment=LANG=en_US.utf8
+Environment=LC_ALL=en_US.utf8
 WorkingDirectory=/opt/retro-console
 ExecStart=/usr/bin/xterm -u8 -fa 'Monospace' -fs 14 -fullscreen -bg black -fg white -e "/home/%u/.local/bin/uv run retro-console"
 Restart=always
