@@ -1,0 +1,14 @@
+[Unit]
+Description=Retro Console
+After=graphical-session.target antimicrox.service
+Wants=antimicrox.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/retro-console
+ExecStart=xterm -fullscreen -e "uv run retro-console"
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=graphical-session.target

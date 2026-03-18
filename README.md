@@ -11,6 +11,36 @@ A retro-style video game console menu system for the terminal. Built with Python
 - Configurable joystick and button mapping
 - Debug mode for troubleshooting
 
+## Raspberry Pi Setup
+
+The console is designed to run on a Raspberry Pi with a game controller mapped to keyboard input via AntiMicroX.
+
+### Prerequisites
+
+```bash
+sudo apt install antimicrox xterm
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Configure the Pi to auto-login to the desktop (via `raspi-config` > System > Auto Login).
+
+### Install and enable services
+
+```bash
+bash config/install.sh
+```
+
+This copies the app to `/opt/retro-console`, installs Python dependencies, and enables two systemd user services:
+
+- **antimicrox** — starts AntiMicroX with `config/gamecontroller.amgp` on desktop login
+- **retro-console** — opens a fullscreen terminal running `uv run retro-console`
+
+After rebooting the services start automatically. To start them immediately without rebooting:
+
+```bash
+systemctl --user start antimicrox retro-console
+```
+
 ## Installation
 
 ```bash

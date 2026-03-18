@@ -1,0 +1,14 @@
+[Unit]
+Description=AntiMicroX Game Controller Mapper
+Documentation=https://github.com/AntiMicroX/antimicrox
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=antimicrox --profile /opt/retro-console/config/gamecontroller.amgp --hidden
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=graphical-session.target
