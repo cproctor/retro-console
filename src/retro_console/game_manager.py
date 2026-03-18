@@ -8,7 +8,7 @@ from pathlib import Path
 import tomli
 
 from retro_console import settings
-from retro_console.models import get_session, get_or_create_game, record_play, add_high_score
+from retro_console.models import get_session, get_or_create_game, record_play, add_high_score, Game
 
 
 class GameValidationResult:
@@ -139,9 +139,16 @@ def discover_games():
 
 
 def register_games(valid_games, session=None):
-    """Register valid games in the database."""
+    """Register valid games in the database, removing any that no longer exist."""
     if session is None:
         session = get_session()
+
+    valid_paths = {str(g.path) for g in valid_games}
+    for db_game in session.query(Game).all():
+        if db_game.package_path not in valid_paths:
+            session.delete(db_game)
+    session.commit()
+
     db_games = []
 
     for game_result in valid_games:
