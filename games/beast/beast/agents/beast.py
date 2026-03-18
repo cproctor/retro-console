@@ -19,6 +19,7 @@ class Beast:
         obstacle = get_occupant(game, future_position)
         if obstacle or not on_board:
             self.die(game)
+            game.state["score"] += game.state["level"]
             return True
         else:
             return False
