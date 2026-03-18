@@ -23,8 +23,8 @@ class Game(Base):
     play_count = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    high_scores = relationship("HighScore", back_populates="game", order_by="HighScore.score.desc()")
-    plays = relationship("Play", back_populates="game")
+    high_scores = relationship("HighScore", back_populates="game", order_by="HighScore.score.desc()", cascade="all, delete-orphan")
+    plays = relationship("Play", back_populates="game", cascade="all, delete-orphan")
 
     def get_top_scores(self, limit=10):
         """Get the top N high scores for this game."""
