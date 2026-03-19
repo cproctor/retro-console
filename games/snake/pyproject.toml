@@ -11,6 +11,7 @@ dependencies = [
 play = "snake:main"
 
 [tool.retro]
+name = "Snake"
 author = "Chris"
 description = "Eat apples. Watch out for yourself."
 instructions = "Use the arrow keys to steer the snake."

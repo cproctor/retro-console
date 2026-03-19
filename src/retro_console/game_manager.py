@@ -53,11 +53,6 @@ def validate_game(game_path):
     tool = pyproject.get("tool", {})
     retro = tool.get("retro", {})
 
-    # Get game name from project.name
-    result.name = project.get("name")
-    if not result.name:
-        result.add_error("Missing project.name")
-
     # Check for play script
     if "play" not in scripts:
         result.add_error("Missing project.scripts.play")
@@ -65,6 +60,11 @@ def validate_game(game_path):
         result.play_script = scripts["play"]
 
     # Check for retro tool settings
+    if "name" not in retro:
+        result.add_error("Missing tool.retro.name")
+    else:
+        result.name = retro["name"]
+
     if "author" not in retro:
         result.add_error("Missing tool.retro.author")
     else:

@@ -11,6 +11,7 @@ dependencies = [
 play = "beast:main"
 
 [tool.retro]
+name = "Beast"
 author = "Chris"
 description = "Push blocks to squish the beasties. Don't let them catch you!"
 instructions = "Use the arrow keys to push blocks. Squish beasts between blocks."

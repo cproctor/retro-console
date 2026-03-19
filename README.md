@@ -76,14 +76,13 @@ The console is designed to work with a joystick and buttons that appear as keybo
 
 ### Debug Mode
 
-Press F12 during startup to enter debug mode, which displays validation results and drops to a shell.
+Press any key during startup to enter debug mode, which displays validation results and drops to a shell.
 
 ## Configuration
 
 Edit `src/retro_console/settings.py` to customize:
 
 - `SCREEN_WIDTH`, `SCREEN_HEIGHT`: Terminal dimensions
-- `DEBUG_KEY`: Key to enter debug mode
 - `MAX_GAME_DURATION`: Auto-kill games after this many seconds
 - `GAMES_DIR`: Directory containing game packages
 - `GAME_SELECT_TIMEOUT`: Return to splash after inactivity
@@ -101,6 +100,7 @@ name = "my-game"
 play = "my_game.game:main"
 
 [tool.retro]
+name = "Game name for display"
 author = "Your Name"
 description = "A short description of your game"
 instructions = "How to play"
@@ -114,6 +114,13 @@ When a game ends, it should write a JSON file with the score:
 ```
 
 Games should use the [retro-games](https://github.com/cproctor/retro) library for terminal rendering.
+
+Games can be added as submodules, allowing authors to keep making changes. In this case, 
+
+```
+git submodule add <repo-url> games/<game-name>
+git commit -m "Add <game-name> as submodule"
+```
 
 ## Project Structure
 
