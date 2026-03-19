@@ -7,7 +7,7 @@ import sys
 from blessed import Terminal
 
 from retro_console import settings
-from retro_console.models import init_db, get_session, Game
+from retro_console.models import init_db, get_session, Game, purge_banned_high_scores
 from retro_console.input_handler import InputHandler
 from retro_console.game_manager import discover_games, register_games
 from retro_console.screens import SplashScreen, GameSelectScreen, HighScoreScreen
@@ -90,6 +90,7 @@ class RetroConsoleApp:
         try:
             init_db()
             self.session = get_session()
+            purge_banned_high_scores(self.session, settings.get_forbidden_words())
         except Exception as e:
             errors.append(f"Database initialization failed: {e}")
 

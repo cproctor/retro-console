@@ -117,7 +117,8 @@ class GameSelectScreen(Screen):
             line += 1
 
         # Instructions at bottom
-        print(self.move(x, self.height - 2) + "[A] Play  [UP/DOWN] Select")
+        t = self.terminal
+        print(self.move(x, self.height - 2) + t.red + "[A] Play" + t.normal + "  [UP/DOWN] Select")
 
     def _wrap_text(self, text, width):
         """Simple word wrapping."""

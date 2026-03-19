@@ -27,8 +27,10 @@ class HighScoreScreen(Screen):
 
     def draw(self):
         """Draw the high score entry screen."""
+        t = self.terminal
+
         # Title
-        self.center_text(self.terminal.bold + "NEW HIGH SCORE!" + self.terminal.normal, 2)
+        self.center_text(t.bold + "NEW HIGH SCORE!" + t.normal, 2)
 
         # Game and score info
         self.center_text(f"Game: {self.game.name}", 5)
@@ -37,14 +39,18 @@ class HighScoreScreen(Screen):
         # Current initials
         initials_display = self.initials + "_" * (3 - len(self.initials))
         self.center_text("Enter your initials:", 9)
-        self.center_text(self.terminal.bold + f"[ {initials_display} ]" + self.terminal.normal, 11)
+        self.center_text(t.bold + f"[ {initials_display} ]" + t.normal, 11)
 
         # Virtual keyboard
-        kb_start_y = 14
-        self._draw_keyboard(kb_start_y)
+        self._draw_keyboard(14)
 
-        # Instructions
-        self.center_text("[Joystick] Move  [A] Select", self.height - 2)
+        # Instructions — buttons shown only when their action is available
+        instructions = t.red + "[A] Select" + t.normal
+        if self.initials:
+            instructions += "  " + t.yellow + "[B] Delete" + t.normal
+        if len(self.initials) == 3 and self._is_valid_initials():
+            instructions += "  " + t.green + "[C] Save" + t.normal
+        self.center_text(instructions, self.height - 2)
 
     def _draw_keyboard(self, start_y):
         """Draw the virtual keyboard."""
@@ -82,7 +88,6 @@ class HighScoreScreen(Screen):
         row = KEYBOARD_ROWS[self.cursor_row]
         char = row[self.cursor_col]
 
-        # Handle special keys
         if char == "<":
             return "BACKSPACE"
         elif char == "-":
@@ -93,6 +98,12 @@ class HighScoreScreen(Screen):
             return "OK"
         else:
             return char
+
+    def _save_and_exit(self):
+        save_high_score(self.game, self.initials, self.score, self.app.session)
+        self.app.pending_high_score = None
+        self.app.refresh_games()
+        return "game_select"
 
     def handle_input(self):
         """Handle input for initial entry."""
@@ -116,11 +127,9 @@ class HighScoreScreen(Screen):
             elif logical_key == "LEFT":
                 if self.cursor_col > 0:
                     new_col = self.cursor_col - 1
-                    # Skip over second part of multi-char keys
                     char = KEYBOARD_ROWS[self.cursor_row][new_col]
                     if char in "-K":
                         new_col -= 1
-                    # Only move if still in bounds
                     if new_col >= 0:
                         self.cursor_col = new_col
                         self.clear()
@@ -130,11 +139,9 @@ class HighScoreScreen(Screen):
                 row_len = len(KEYBOARD_ROWS[self.cursor_row])
                 if self.cursor_col < row_len - 1:
                     new_col = self.cursor_col + 1
-                    # Skip over second part of multi-char keys
                     char = KEYBOARD_ROWS[self.cursor_row][new_col]
                     if char in "-K":
                         new_col += 1
-                    # Only move if still in bounds
                     if new_col < row_len:
                         self.cursor_col = new_col
                         self.clear()
@@ -142,40 +149,35 @@ class HighScoreScreen(Screen):
 
             elif logical_key == "A":
                 char = self._get_current_char()
-
                 if char == "BACKSPACE":
                     if self.initials:
                         self.initials = self.initials[:-1]
                         self.clear()
                         self.draw()
-
                 elif char == "OK":
-                    if len(self.initials) == 3:
-                        if self._is_valid_initials():
-                            save_high_score(self.game, self.initials, self.score, self.app.session)
-                            self.app.pending_high_score = None
-                            self.app.refresh_games()
-                            return "game_select"
-                        else:
-                            # Show error for forbidden word
-                            self.center_text(
-                                self.terminal.red + "Invalid initials!" + self.terminal.normal,
-                                self.height - 4
-                            )
-
+                    if len(self.initials) == 3 and self._is_valid_initials():
+                        return self._save_and_exit()
                 else:
-                    # Regular letter
                     if len(self.initials) < 3:
                         self.initials += char
                         self.clear()
                         self.draw()
+
+            elif logical_key == "B":
+                if self.initials:
+                    self.initials = self.initials[:-1]
+                    self.clear()
+                    self.draw()
+
+            elif logical_key == "C":
+                if len(self.initials) == 3 and self._is_valid_initials():
+                    return self._save_and_exit()
 
     def _adjust_cursor_col(self):
         """Adjust cursor column when changing rows."""
         row_len = len(KEYBOARD_ROWS[self.cursor_row])
         if self.cursor_col >= row_len:
             self.cursor_col = row_len - 1
-        # Avoid landing on second part of multi-char keys
         char = KEYBOARD_ROWS[self.cursor_row][self.cursor_col]
         if char in "-K":
             self.cursor_col -= 1

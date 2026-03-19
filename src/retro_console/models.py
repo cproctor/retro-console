@@ -120,6 +120,19 @@ def record_play(session, game, score=None):
     return play
 
 
+def purge_banned_high_scores(session, banned_words):
+    """Delete any high score entries whose initials appear in the banned words list."""
+    if not banned_words:
+        return
+    entries = session.query(HighScore).filter(
+        HighScore.initials.in_(banned_words)
+    ).all()
+    for entry in entries:
+        session.delete(entry)
+    if entries:
+        session.commit()
+
+
 def add_high_score(session, game, initials, score):
     """Add a new high score entry."""
     high_score = HighScore(

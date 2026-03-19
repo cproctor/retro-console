@@ -11,7 +11,7 @@ MAX_GAME_DURATION = None  # Set to number of seconds, or None for no limit
 GAMES_DIR = Path("games")
 
 # High score settings
-FORBIDDEN_WORDS_FILE = None  # Path to file with forbidden three-letter words
+FORBIDDEN_WORDS_FILE = Path(__file__).parent / "banned_words.txt"
 
 # Timeout settings
 GAME_SELECT_TIMEOUT = 60  # Seconds of inactivity before returning to splash
@@ -59,6 +59,6 @@ def get_forbidden_words():
     with open(path, "r") as f:
         for line in f:
             word = line.strip().upper()
-            if len(word) == 3:
+            if word and not word.startswith("#") and len(word) == 3:
                 words.add(word)
     return words

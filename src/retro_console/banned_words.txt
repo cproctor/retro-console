@@ -1,0 +1,74 @@
+# Banned three-letter initials for high score entries.
+# One combination per line. Lines starting with # are ignored.
+# Covers profanity, slurs, sexual terms, and threatening language.
+
+# Profanity
+ASS
+FUK
+FUC
+FCK
+SHT
+SHI
+CUM
+CUN
+TWA
+DIK
+DCK
+COK
+COC
+TIT
+FAG
+SUK
+SCK
+JIZ
+NUT
+HOE
+SLT
+WTF
+SOB
+PRK
+PNS
+VAG
+BUM
+POO
+PEE
+PIS
+PUS
+
+# Slurs
+NGR
+NGA
+NIG
+KKK
+WOP
+GYP
+SPK
+DAG
+KYK
+WOG
+PAK
+CHI
+CNT
+JEW
+FLT
+DYK
+DYC
+LES
+
+# Sexual
+SEX
+XXX
+BJS
+BLJ
+HOR
+ANL
+ORG
+STD
+HIV
+
+# Threatening / violent
+KYS
+DIE
+KIL
+MRD
+GUN
