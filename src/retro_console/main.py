@@ -53,6 +53,22 @@ class RetroConsoleApp:
         except Exception as e:
             print(f"Git pull error: {e}")
 
+        try:
+            result = subprocess.run(
+                ["git", "submodule", "update", "--init", "--recursive", "--remote"],
+                capture_output=True,
+                text=True,
+                timeout=60
+            )
+            if result.returncode == 0:
+                print("Submodules updated")
+            else:
+                print(f"Submodule update failed: {result.stderr.strip()}")
+        except subprocess.TimeoutExpired:
+            print("Submodule update timed out")
+        except Exception as e:
+            print(f"Submodule update error: {e}")
+
     def check_terminal_size(self):
         """Check if terminal is large enough."""
         if self.terminal.width < settings.SCREEN_WIDTH:

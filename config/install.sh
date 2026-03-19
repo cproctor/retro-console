@@ -28,6 +28,9 @@ sudo rsync -a --delete \
     "$REPO_DIR/" "$INSTALL_DIR/"
 sudo chown -R "$USER:$USER" "$INSTALL_DIR"
 
+echo "==> Initialising git submodules"
+(cd "$INSTALL_DIR" && git submodule update --init --recursive)
+
 echo "==> Syncing Python dependencies"
 (cd "$INSTALL_DIR" && uv sync)
 
