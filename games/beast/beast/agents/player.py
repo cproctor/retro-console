@@ -40,7 +40,6 @@ class Player:
             self.position = future_position
 
     def die(self, game):
-        self.color = "black_on_red"
         manager = game.get_agent_by_name("manager")
         manager.respawn_player(game)
 
