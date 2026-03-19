@@ -19,11 +19,12 @@ class Beast:
         future_position = add(self.position, vector)
         on_board = game.on_board(future_position)
         obstacle = get_occupant(game, future_position)
+        if obstacle and isinstance(obstacle, Beast):
+            return False
         if obstacle or not on_board:
             self.die(game)
             return True
-        else:
-            return False
+        return False
 
     def play_turn(self, game):
         self.energy += uniform(0, 2 / self.average_turns_between_moves)

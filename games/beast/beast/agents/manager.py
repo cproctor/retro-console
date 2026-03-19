@@ -57,14 +57,12 @@ class Manager:
         self.beasts = [b for b in self.beasts if b in game.agents]
         if not self.beasts:
             game.state["level"] += 1
-            game.state["message"] = f"Level {game.state['level']}!"
             self._setup_pending = True
 
     def respawn_player(self, game):
         """Decrement lives. End the game if none remain, otherwise move player to safety."""
         game.state["lives"] -= 1
         if game.state["lives"] <= 0:
-            game.state["message"] = "Game over!"
             game.end()
             return
         player = game.get_agent_by_name("player")
@@ -75,4 +73,3 @@ class Manager:
         safe_pos = self.board.find_safe_spawn(beast_positions, occupied)
         if safe_pos:
             player.position = safe_pos
-        game.state["message"] = f"Lives: {game.state['lives']}"
