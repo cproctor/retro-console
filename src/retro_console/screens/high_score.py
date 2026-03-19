@@ -80,15 +80,17 @@ class HighScoreScreen(Screen):
 
             if logical_key == "UP":
                 if self.cursor_row > 0:
+                    old_row = self.cursor_row
                     self.cursor_row -= 1
-                    self._adjust_cursor_col()
+                    self._adjust_cursor_col(old_row)
                     self.clear()
                     self.draw()
 
             elif logical_key == "DOWN":
                 if self.cursor_row < len(KEYBOARD_ROWS) - 1:
+                    old_row = self.cursor_row
                     self.cursor_row += 1
-                    self._adjust_cursor_col()
+                    self._adjust_cursor_col(old_row)
                     self.clear()
                     self.draw()
 
@@ -121,11 +123,18 @@ class HighScoreScreen(Screen):
                 if len(self.initials) == 3 and self._is_valid_initials():
                     return self._save_and_exit()
 
-    def _adjust_cursor_col(self):
-        """Adjust cursor column when changing rows to a shorter row."""
-        row_len = len(KEYBOARD_ROWS[self.cursor_row])
-        if self.cursor_col >= row_len:
-            self.cursor_col = row_len - 1
+    def _adjust_cursor_col(self, from_row):
+        """Adjust cursor column to maintain visual alignment when changing rows.
+
+        Since rows of different lengths are centered, moving between rows of
+        different widths requires shifting the column index to keep the cursor
+        at the same visual horizontal position.
+        """
+        from_len = len(KEYBOARD_ROWS[from_row])
+        to_len = len(KEYBOARD_ROWS[self.cursor_row])
+        offset = (to_len - from_len) / 2
+        self.cursor_col = round(self.cursor_col + offset)
+        self.cursor_col = max(0, min(self.cursor_col, to_len - 1))
 
     def _is_valid_initials(self):
         """Check if initials are valid (not a forbidden word)."""
