@@ -41,6 +41,6 @@ class Player:
 
     def die(self, game):
         self.color = "black_on_red"
-        game.state["message"] = "The beasties win!"
-        game.end()
+        manager = game.get_agent_by_name("manager")
+        manager.respawn_player(game)
 
