@@ -93,7 +93,7 @@ def init_db():
 
 def get_or_create_game(session, name, package_path, author=None, description=None):
     """Get an existing game or create a new one."""
-    game = session.query(Game).filter_by(name=name).first()
+    game = session.query(Game).filter_by(package_path=package_path).first()
     if game is None:
         game = Game(
             name=name,
@@ -104,9 +104,9 @@ def get_or_create_game(session, name, package_path, author=None, description=Non
         session.add(game)
         session.commit()
     else:
+        game.name = name
         game.author = author
         game.description = description
-        game.package_path = package_path
         session.commit()
     return game
 
