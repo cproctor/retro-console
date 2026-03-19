@@ -1,0 +1,3 @@
+[submodule "games/fruit-catcher"]
+	path = games/fruit-catcher
+	url = https://git.makingwithcode.org/kdang/project_game.git
