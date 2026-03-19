@@ -9,7 +9,7 @@ from retro_console.game_manager import save_high_score
 KEYBOARD_ROWS = [
     "ABCDEFGHIJ",
     "KLMNOPQRST",
-    "UVWXYZ<-OK",
+    "UVWXYZ",
 ]
 
 
@@ -58,46 +58,14 @@ class HighScoreScreen(Screen):
             row_str = ""
             for col_idx, char in enumerate(row):
                 if row_idx == self.cursor_row and col_idx == self.cursor_col:
-                    # Highlight current selection
-                    if char == "<":
-                        row_str += self.terminal.reverse + "<-" + self.terminal.normal + " "
-                    elif char == "-":
-                        continue  # Part of backspace
-                    elif char == "O" and col_idx > 0 and row[col_idx - 1] == "-":
-                        row_str += self.terminal.reverse + "OK" + self.terminal.normal + " "
-                    elif char == "K" and col_idx > 0 and row[col_idx - 1] == "O":
-                        continue  # Part of OK
-                    else:
-                        row_str += self.terminal.reverse + f" {char} " + self.terminal.normal + " "
+                    row_str += self.terminal.reverse + f" {char} " + self.terminal.normal + " "
                 else:
-                    if char == "<":
-                        row_str += "<- "
-                    elif char == "-":
-                        continue
-                    elif char == "O" and col_idx > 0 and row[col_idx - 1] == "-":
-                        row_str += "OK "
-                    elif char == "K" and col_idx > 0 and row[col_idx - 1] == "O":
-                        continue
-                    else:
-                        row_str += f" {char}  "
-
+                    row_str += f" {char}  "
             self.center_text(row_str, start_y + row_idx * 2)
 
     def _get_current_char(self):
         """Get the character at the current cursor position."""
-        row = KEYBOARD_ROWS[self.cursor_row]
-        char = row[self.cursor_col]
-
-        if char == "<":
-            return "BACKSPACE"
-        elif char == "-":
-            return "BACKSPACE"
-        elif char == "O" and self.cursor_col > 0 and row[self.cursor_col - 1] == "-":
-            return "OK"
-        elif char == "K" and self.cursor_col > 0 and row[self.cursor_col - 1] == "O":
-            return "OK"
-        else:
-            return char
+        return KEYBOARD_ROWS[self.cursor_row][self.cursor_col]
 
     def _save_and_exit(self):
         save_high_score(self.game, self.initials, self.score, self.app.session)
@@ -126,42 +94,22 @@ class HighScoreScreen(Screen):
 
             elif logical_key == "LEFT":
                 if self.cursor_col > 0:
-                    new_col = self.cursor_col - 1
-                    char = KEYBOARD_ROWS[self.cursor_row][new_col]
-                    if char in "-K":
-                        new_col -= 1
-                    if new_col >= 0:
-                        self.cursor_col = new_col
-                        self.clear()
-                        self.draw()
+                    self.cursor_col -= 1
+                    self.clear()
+                    self.draw()
 
             elif logical_key == "RIGHT":
                 row_len = len(KEYBOARD_ROWS[self.cursor_row])
                 if self.cursor_col < row_len - 1:
-                    new_col = self.cursor_col + 1
-                    char = KEYBOARD_ROWS[self.cursor_row][new_col]
-                    if char in "-K":
-                        new_col += 1
-                    if new_col < row_len:
-                        self.cursor_col = new_col
-                        self.clear()
-                        self.draw()
+                    self.cursor_col += 1
+                    self.clear()
+                    self.draw()
 
             elif logical_key == "A":
-                char = self._get_current_char()
-                if char == "BACKSPACE":
-                    if self.initials:
-                        self.initials = self.initials[:-1]
-                        self.clear()
-                        self.draw()
-                elif char == "OK":
-                    if len(self.initials) == 3 and self._is_valid_initials():
-                        return self._save_and_exit()
-                else:
-                    if len(self.initials) < 3:
-                        self.initials += char
-                        self.clear()
-                        self.draw()
+                if len(self.initials) < 3:
+                    self.initials += self._get_current_char()
+                    self.clear()
+                    self.draw()
 
             elif logical_key == "B":
                 if self.initials:
@@ -174,13 +122,10 @@ class HighScoreScreen(Screen):
                     return self._save_and_exit()
 
     def _adjust_cursor_col(self):
-        """Adjust cursor column when changing rows."""
+        """Adjust cursor column when changing rows to a shorter row."""
         row_len = len(KEYBOARD_ROWS[self.cursor_row])
         if self.cursor_col >= row_len:
             self.cursor_col = row_len - 1
-        char = KEYBOARD_ROWS[self.cursor_row][self.cursor_col]
-        if char in "-K":
-            self.cursor_col -= 1
 
     def _is_valid_initials(self):
         """Check if initials are valid (not a forbidden word)."""
