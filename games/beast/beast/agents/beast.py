@@ -29,16 +29,16 @@ class Beast:
         self.energy += uniform(0, 2 / self.average_turns_between_moves)
         if self.energy >= 1.0:
             self.energy -= 1.0
+            player = game.get_agent_by_name("player")
             possible_moves = [
                 pos for pos in self.get_adjacent_positions()
-                if game.is_empty(pos) and game.on_board(pos)
+                if pos == player.position or (game.is_empty(pos) and game.on_board(pos))
             ]
             if possible_moves:
                 if uniform(0, 1) < self.probability_of_random_move:
                     self.position = choice(possible_moves)
                 else:
                     self.position = self.choose_best_move(possible_moves, game)
-            player = game.get_agent_by_name("player")
             if player.position == self.position:
                 player.die(game)
 
