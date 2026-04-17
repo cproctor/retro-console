@@ -56,11 +56,13 @@ class Manager:
         """Called by a Beast when it dies. Schedules next level if all beasts are gone."""
         self.beasts = [b for b in self.beasts if b in game.agents]
         if not self.beasts:
+            game.log("play success_large")
             game.state["level"] += 1
             self._setup_pending = True
 
     def respawn_player(self, game):
         """Decrement lives. End the game if none remain, otherwise move player to safety."""
+        game.log("play lose_a_life")
         game.state["lives"] -= 1
         if game.state["lives"] <= 0:
             game.end()

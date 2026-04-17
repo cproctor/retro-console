@@ -5,7 +5,7 @@ from snake.snake import SnakeHead
 def main():
     head = SnakeHead()
     apple = Apple()
-    game = Game([head, apple], {'score': 0}, board_size=(32, 16), framerate=12, dump_state="result.json")
+    game = Game([head, apple], {'score': 0}, board_size=(32, 16), framerate=12, dump_state="result.json", log_file="game.log")
     apple.relocate(game)
     game.play()
 

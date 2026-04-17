@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Eat apples. Watch out for yourself."
 requires-python = ">=3.10,<4.0"
 dependencies = [
-    "retro-games==2.0.0",
+    "retro-games==2.2.0",
 ]
 
 [project.scripts]
@@ -16,6 +16,7 @@ author = "Chris"
 description = "Eat apples. Watch out for yourself."
 instructions = "Use the arrow keys to steer the snake."
 result_file = "result.json"
+log_file = "game.log"
 
 [build-system]
 requires = ["hatchling"]

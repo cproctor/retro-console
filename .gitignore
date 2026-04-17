@@ -1,3 +1,10 @@
 retro_console.db
-**/__pycache__/*
+retro_console.log
+**/__pycache__/
+**/*.pyc
+**/.venv/
 **/result.json
+**/game.log
+**/log.txt
+docs/_build/
+.claude/

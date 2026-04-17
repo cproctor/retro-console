@@ -59,6 +59,7 @@ class Beast:
         return best_move
 
     def die(self, game):
+        game.log("play hit_large")
         game.remove_agent(self)
         game.state["score"] += game.state["level"]
         manager = game.get_agent_by_name("manager")

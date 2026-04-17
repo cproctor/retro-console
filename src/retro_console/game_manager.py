@@ -2,13 +2,25 @@
 
 import json
 import os
+import re
 import subprocess
+import threading
+import time
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import tomli
 
 from retro_console import settings
+from retro_console.logging_setup import get_logger
 from retro_console.models import get_session, get_or_create_game, record_play, add_high_score, Game
+
+if TYPE_CHECKING:
+    from retro_console.sound_manager import SoundManager
+
+log = get_logger(__name__)
+
+_PLAY_PATTERN = re.compile(r"^\d+: play (\S+)$")
 
 
 class GameValidationResult:
@@ -23,6 +35,7 @@ class GameValidationResult:
         self.description = None
         self.play_script = None
         self.result_file = None
+        self.log_file = None  # optional; relative to the game directory
 
     def add_error(self, error):
         self.errors.append(error)
@@ -79,6 +92,11 @@ def validate_game(game_path):
         result.add_error("Missing tool.retro.result_file")
     else:
         result.result_file = retro["result_file"]
+
+    if "log_file" in retro:
+        result.log_file = retro["log_file"]
+    else:
+        log.warning("game_no_log_file", game=game_path.name)
 
     # If no errors so far, mark as valid
     if not result.errors:
@@ -164,39 +182,100 @@ def register_games(valid_games, session=None):
     return db_games
 
 
-def run_game(game, session=None):
-    """Run a game and return the result.
+def _watch_log(log_file: Path, sound_manager: "SoundManager", stop: threading.Event) -> None:
+    """Background thread: tail log_file and play sounds for 'play <name>' lines.
 
-    Returns (success, score) where score may be None.
+    The retro Game class truncates the log file to 0 bytes on __init__, so we
+    wait for that truncation before opening the file. This avoids the stale-
+    position bug where a file handle seeked to the end of a previous run's log
+    would sit past EOF forever after the file is truncated.
     """
+    deadline = time.monotonic() + 15
+    while not stop.is_set():
+        if time.monotonic() > deadline:
+            return
+        try:
+            if log_file.stat().st_size == 0:
+                break
+        except FileNotFoundError:
+            pass
+        time.sleep(0.05)
+
+    if stop.is_set():
+        return
+
+    with open(log_file) as f:
+        while not stop.is_set():
+            line = f.readline()
+            if line:
+                m = _PLAY_PATTERN.match(line.strip())
+                if m:
+                    sound_manager.play(m.group(1))
+            else:
+                time.sleep(0.05)
+
+
+def run_game(game, session=None, sound_manager: "SoundManager | None" = None):
+    """Run a game and return (success, score). score may be None."""
     game_path = Path(game.package_path)
 
-    # Delete any existing result file
     result_file = game_path / "result.json"
     if result_file.exists():
         result_file.unlink()
 
-    # Run the game
+    # Read the game's log file path from its pyproject.toml (optional).
+    game_log_path: Path | None = None
     try:
-        timeout = settings.MAX_GAME_DURATION
-        env = os.environ.copy()
-        env.pop("VIRTUAL_ENV", None)
-        env.pop("VIRTUAL_ENV_PROMPT", None)
-        for logical, physical in settings.KEY_MAPPING.items():
-            env[f"RETRO_KEY_{logical}"] = physical
-        result = subprocess.run(
+        with open(game_path / "pyproject.toml", "rb") as f:
+            pyproject = tomli.load(f)
+        log_file_rel = pyproject.get("tool", {}).get("retro", {}).get("log_file")
+        if log_file_rel:
+            game_log_path = game_path / log_file_rel
+    except Exception as e:
+        log.warning("game_log_path_read_error", game=game.name, error=str(e))
+
+    env = os.environ.copy()
+    env.pop("VIRTUAL_ENV", None)
+    env.pop("VIRTUAL_ENV_PROMPT", None)
+    for logical, physical in settings.KEY_MAPPING.items():
+        env[f"RETRO_KEY_{logical}"] = physical
+
+    if sound_manager is not None:
+        sound_manager.play("start_game")
+
+    log.info("game_start", game=game.name)
+    stop_watch = threading.Event()
+    watch_thread = None
+
+    try:
+        proc = subprocess.Popen(
             ["uv", "run", "play"],
             cwd=game_path,
-            timeout=timeout,
             env=env,
         )
-    except subprocess.TimeoutExpired:
-        # Game timed out - still try to read results
-        pass
-    except Exception as e:
-        return (False, None)
 
-    # Try to read the result file
+        if sound_manager is not None and game_log_path is not None:
+            watch_thread = threading.Thread(
+                target=_watch_log,
+                args=(game_log_path, sound_manager, stop_watch),
+                daemon=True,
+            )
+            watch_thread.start()
+
+        try:
+            proc.wait(timeout=settings.MAX_GAME_DURATION)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait()
+
+    except Exception as e:
+        log.error("game_launch_error", game=game.name, error=str(e))
+        return (False, None)
+    finally:
+        stop_watch.set()
+        if watch_thread is not None:
+            watch_thread.join(timeout=2)
+
     score = None
     if result_file.exists():
         try:
@@ -206,11 +285,11 @@ def run_game(game, session=None):
         except Exception:
             pass
 
-    # Record the play
     if session is None:
         session = get_session()
     record_play(session, game, score)
 
+    log.info("game_end", game=game.name, score=score)
     return (True, score)
 
 

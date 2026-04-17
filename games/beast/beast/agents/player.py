@@ -35,8 +35,10 @@ class Player:
             if obstacle.deadly:
                 self.die(game)
             elif obstacle.handle_push(vector, game):
+                game.log("play light_hit")
                 self.position = future_position
         elif on_board:
+            game.log("play move")
             self.position = future_position
 
     def die(self, game):

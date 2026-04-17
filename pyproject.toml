@@ -1,6 +1,6 @@
 [project]
 name = "retro-console"
-version = "1.0.0"
+version = "1.1.0"
 description = "A retro-style video game console menu system for the terminal"
 authors = [{ name = "Chris Proctor", email = "chris@chrisproctor.net" }]
 requires-python = ">=3.13"
@@ -13,7 +13,14 @@ classifiers = [
 dependencies = [
     "blessed>=1.20.0",
     "sqlalchemy>=2.0.0",
+    "structlog>=24.0.0",
     "tomli>=2.0.0",
+]
+
+[project.optional-dependencies]
+docs = [
+    "sphinx>=7.0",
+    "sphinx-rtd-theme>=2.0",
 ]
 
 [project.scripts]

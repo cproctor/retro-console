@@ -49,6 +49,7 @@ class SnakeHead:
         if self.can_move((x+dx, y+dy), game):
             self.position = (x+dx, y+dy)
             if self.is_on_apple(self.position, game):
+                game.log("play success_small")
                 apple = game.get_agent_by_name("Apple")
                 apple.relocate(game)
                 self.growing = True
@@ -60,6 +61,7 @@ class SnakeHead:
                 game.state['score'] += 1
             self.growing = False
         else:
+            game.log("play lose_a_life")
             game.end()
 
     def handle_keystroke(self, keystroke, game):

@@ -7,10 +7,12 @@ import sys
 from blessed import Terminal
 
 from retro_console import settings
+from retro_console.logging_setup import configure_logging, get_logger
 from retro_console.models import init_db, get_session, Game, purge_banned_high_scores
 from retro_console.input_handler import InputHandler
 from retro_console.game_manager import discover_games, register_games
 from retro_console.screens import SplashScreen, GameSelectScreen, HighScoreScreen
+from retro_console.sound_manager import SoundManager
 
 
 class SetupError(Exception):
@@ -22,20 +24,25 @@ class RetroConsoleApp:
     """Main application class."""
 
     def __init__(self):
+        configure_logging(settings.LOG_FILE)
+        self.log = get_logger(__name__)
         self.terminal = Terminal()
         self.input_handler = InputHandler(self.terminal)
+        self.sound_manager = SoundManager()
         self.session = None
         self.games = []
         self.validation_results = []
         self.pending_high_score = None
         self.debug_mode = False
 
-    def pull_latest(self):
-        """Pull latest changes from git repository.
+    def _status(self, msg: str, **log_kw) -> None:
+        """Print a setup status line to the terminal and log it to file."""
+        print(msg)
+        self.log.info(msg, **log_kw)
 
-        Logs the result but does not crash on error (e.g., no network).
-        """
-        print("Pulling latest changes...")
+    def pull_latest(self):
+        """Pull latest changes from git repository."""
+        self._status("Pulling latest changes...")
         try:
             result = subprocess.run(
                 ["git", "pull"],
@@ -44,14 +51,16 @@ class RetroConsoleApp:
                 timeout=30
             )
             if result.returncode == 0:
-                output = result.stdout.strip()
-                print(f"Git pull: {output}")
+                self._status(f"Git pull: {result.stdout.strip()}")
             else:
-                print(f"Git pull failed: {result.stderr.strip()}")
+                self._status(f"Git pull failed: {result.stderr.strip()}")
+                self.log.warning("git_pull_failed", stderr=result.stderr.strip())
         except subprocess.TimeoutExpired:
-            print("Git pull timed out")
+            self._status("Git pull timed out")
+            self.log.warning("git_pull_timeout")
         except Exception as e:
-            print(f"Git pull error: {e}")
+            self._status(f"Git pull error: {e}")
+            self.log.error("git_pull_error", error=str(e))
 
         try:
             result = subprocess.run(
@@ -61,13 +70,16 @@ class RetroConsoleApp:
                 timeout=60
             )
             if result.returncode == 0:
-                print("Submodules updated")
+                self._status("Submodules updated")
             else:
-                print(f"Submodule update failed: {result.stderr.strip()}")
+                self._status(f"Submodule update failed: {result.stderr.strip()}")
+                self.log.warning("git_submodule_update_failed", stderr=result.stderr.strip())
         except subprocess.TimeoutExpired:
-            print("Submodule update timed out")
+            self._status("Submodule update timed out")
+            self.log.warning("git_submodule_update_timeout")
         except Exception as e:
-            print(f"Submodule update error: {e}")
+            self._status(f"Submodule update error: {e}")
+            self.log.error("git_submodule_update_error", error=str(e))
 
     def check_terminal_size(self):
         """Check if terminal is large enough."""
@@ -104,24 +116,26 @@ class RetroConsoleApp:
         self.pull_latest()
 
         # Discover and validate games
-        print("Discovering games...")
+        self._status("Discovering games...")
         valid_games, self.validation_results = discover_games()
 
         if valid_games:
-            print(f"Found {len(valid_games)} valid game(s)")
+            self._status(f"Found {len(valid_games)} valid game(s)")
             self.games = register_games(valid_games, self.session)
         else:
-            print("No valid games found")
+            self._status("No valid games found")
+            self.log.warning("no_valid_games_found")
 
         # Check for debug key during setup
-        print("Press any key within 2 seconds to enter debug mode...")
+        self._status("Press any key within 2 seconds to enter debug mode...")
         raw_key, _ = self.input_handler.read_key(timeout=2)
         if raw_key:
             self.debug_mode = True
 
         if errors:
             for error in errors:
-                print(f"ERROR: {error}")
+                self._status(f"ERROR: {error}")
+                self.log.error("setup_error", error=error)
             self.debug_mode = True
 
         return not errors

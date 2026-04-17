@@ -1,0 +1,4 @@
+.DS_Store
+__pycache__
+fruit_catcher/__pycache__
+result.json

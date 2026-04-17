@@ -155,12 +155,14 @@ class GameSelectScreen(Screen):
             if logical_key == "UP":
                 if self.selected_index > 0:
                     self.selected_index -= 1
+                    self.app.sound_manager.play("move")
                     self.clear()
                     self.draw()
 
             elif logical_key == "DOWN":
                 if self.selected_index < len(self.games) - 1:
                     self.selected_index += 1
+                    self.app.sound_manager.play("move")
                     self.clear()
                     self.draw()
 
@@ -175,7 +177,7 @@ class GameSelectScreen(Screen):
         self.clear()
         self.center_text(f"Starting {game.name}...", self.height // 2)
 
-        success, score = run_game(game, self.app.session)
+        success, score = run_game(game, self.app.session, self.app.sound_manager)
 
         # Restore terminal state after subprocess (game's blessed context emits show-cursor on exit)
         print(self.terminal.normal + self.terminal.hide_cursor, end='', flush=True)

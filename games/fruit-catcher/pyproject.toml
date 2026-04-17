@@ -1,0 +1,38 @@
+[project]
+name = "fruit-catcher"
+version = "0.1.0"
+description = ""
+authors = [{ name = "Kayden Dang, Connor ", email = "chris@chrisproctor.net" }]
+requires-python = ">=3.10,<4.0"
+license = { text = "MIT" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "retro-games==2.2.0",
+]
+
+[project.scripts]
+play = "fruit_catcher.game:play"
+
+[tool.uv.build-backend]
+module-name = "fruit_catcher"
+module-root = ""
+
+
+[build-system]
+requires = ["uv_build>=0.10.0,<0.11.0"]
+build-backend = "uv_build"
+
+[tool.retro]
+name = "Fruit catcher"
+author = "Kayden and Connor"
+description = "Use your buttons to help the catcher catch the falling fruits. Don't drop too many fruits!"
+instructions = "SCore as many points as possible before losing by using the two designated buttons to move left and right."
+result_file = "result.json"
+log_file = "game.log"
