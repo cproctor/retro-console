@@ -16,3 +16,4 @@ extensions = [
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = []
+html_baseurl = "https://docs.makingwithcode.org/retro-console/"
