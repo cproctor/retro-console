@@ -1,28 +1,28 @@
-Game Developer Guide
-====================
+Game Developer
+==============
 
 This guide walks you through building a game that runs on the Retro Console.
-No prior experience with game development is required — if you can write a
-Python program that reads keys and draws to the screen, you can build a game
-for the arcade.
+You don't need any prior experience with game development — if you can write
+a Python program, you can build a game for the arcade.
 
-Overview
---------
+How it works
+------------
 
-A game for the Retro Console is a **Python package** (a folder with source
-code and a ``pyproject.toml`` file). When the console starts, it scans the
-``games/`` folder, installs each game's dependencies automatically, and
-shows them on the game-select screen.
+A game for the Retro Console is a **Python package** — a folder of Python
+code with a configuration file. When the console starts up, it looks inside
+the ``games/`` folder, finds your game, and shows it on the game select
+screen. When a player chooses your game, the console runs it. When the game
+ends, the console reads the player's score and saves it to the high score
+table.
 
-When a player launches your game, the console runs the command
-``uv run play`` inside your game's folder. Your game runs, the player plays,
-and when it ends your code writes a score to a file called ``result.json``.
-The console reads that file and records the high score.
+Your game doesn't need to do anything special to interact with the console —
+you just write a normal Python program using the ``retro`` library, and the
+console takes care of the rest.
 
-Setting Up Your Game Package
-----------------------------
+Setting Up Your Game
+--------------------
 
-Your game folder needs to look roughly like this::
+Your game folder should look like this::
 
     games/
     └── my-game/
@@ -31,11 +31,15 @@ Your game folder needs to look roughly like this::
         │   └── __init__.py
         └── ...
 
-``pyproject.toml`` — The Package Manifest
+The configuration file: ``pyproject.toml``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Every game needs a ``pyproject.toml`` file. Here is a template you can copy
-and adapt:
+Every game needs a file called ``pyproject.toml`` at the top of its folder.
+This file tells the console (and Python's packaging tools) everything they
+need to know about your game: its name, who wrote it, what libraries it
+needs, and how to run it.
+
+Here is a template you can copy and fill in:
 
 .. code-block:: toml
 
@@ -44,7 +48,7 @@ and adapt:
     version = "0.1.0"
     requires-python = ">=3.10"
     dependencies = [
-        "retro>=2.0.0",
+        "retro-games>=2.2.0",
     ]
 
     [project.scripts]
@@ -63,22 +67,28 @@ and adapt:
 
 The parts that matter most:
 
+``dependencies``
+    Lists the Python libraries your game needs. At minimum you'll want
+    ``retro-games``, which provides the ``Game`` class and other tools.
+    The console installs these automatically when it first finds your game.
+
 ``[project.scripts] play = "my_game:main"``
     This tells the console how to start your game. ``my_game`` is the name
-    of your Python module and ``main`` is the function to call. When the
-    player presses A on the game select screen, the console runs
-    ``uv run play``, which calls your ``main()`` function.
+    of your Python module (matching the folder name ``my_game/``) and
+    ``main`` is the function inside it to call. When a player presses A on
+    the game select screen, the console runs ``uv run play``, which calls
+    your ``main()`` function.
 
 ``[tool.retro]``
-    The console reads these fields to register your game. All five keys
-    (``name``, ``author``, ``description``, ``result_file``, and ``log_file``)
-    are required.
+    The console reads these five fields to register your game. All five are
+    required: ``name``, ``author``, ``description``, ``result_file``, and
+    ``log_file``.
 
 Writing Your ``main()`` Function
 ---------------------------------
 
-Your ``main()`` function is the entry point. A minimal skeleton using the
-``retro`` library looks like this:
+Your ``main()`` function is where your game starts. Here is a minimal
+example using the ``retro`` library:
 
 .. code-block:: python
 
@@ -95,27 +105,38 @@ Your ``main()`` function is the entry point. A minimal skeleton using the
         with MyGameView(game) as view:
             game.run()
 
-Key points:
+A few things to note:
 
-- ``dump_state="result.json"`` tells the ``retro`` library to write the
-  game state (including ``score``) to ``result.json`` automatically when
-  the game ends. If you don't include this, no score is recorded and the
-  high-score screen won't appear.
-- ``log_file="game.log"`` must match the ``log_file`` value in your
-  ``pyproject.toml`` so that the console knows where to watch for
-  sound-effect requests. The path is relative to your game's directory.
+- **``state``** holds the information your game needs to keep track of —
+  things like the score, lives remaining, or the positions of objects on
+  screen.
+- **``agents``** are the things that can act in your game: the player
+  character, enemies, items. ``ArrowKeyAgent`` is a built-in agent that
+  reads the arrow keys so the player can move.
+- **``dump_state="result.json"``** tells the ``retro`` library to save the
+  game state (including the score) to a file called ``result.json``
+  automatically when the game ends. The console reads this file to record
+  the high score. If you leave this out, no score is saved.
+- **``log_file="game.log"``** tells the library where to write a log of
+  game events. The console watches this file to trigger sound effects. This
+  value must match the ``log_file`` setting in your ``pyproject.toml``.
 
 Reading the Controls
 --------------------
 
-The console passes key mappings to your game via environment variables so
-that the physical joystick/gamepad buttons map correctly regardless of how
-the hardware is configured. The variables are named ``RETRO_KEY_<BUTTON>``
-where ``<BUTTON>`` is one of ``UP``, ``DOWN``, ``LEFT``, ``RIGHT``,
-``A``, ``B``, ``C``, ``D``, ``E``, ``F``, ``G``, ``H``.
+The physical gamepad buttons are different on every arcade setup, so the
+console passes the correct key names to your game as **settings** (called
+environment variables) when it starts your game. Think of it like the
+console leaving a note for your game that says "on this machine, the UP
+button is the up arrow key."
 
-The ``retro`` library's ``ArrowKeyAgent`` reads these automatically. If you
-are building your own input handling, you can read the variables directly:
+These settings are named ``RETRO_KEY_UP``, ``RETRO_KEY_DOWN``,
+``RETRO_KEY_LEFT``, ``RETRO_KEY_RIGHT``, ``RETRO_KEY_A``, and so on up
+through ``RETRO_KEY_H``.
+
+The ``retro`` library's ``ArrowKeyAgent`` reads these automatically, so
+most of the time you don't need to think about this. If you are writing
+your own input handling, you can read the settings like this:
 
 .. code-block:: python
 
@@ -125,14 +146,17 @@ are building your own input handling, you can read the variables directly:
     down_key  = os.environ.get("RETRO_KEY_DOWN",  "KEY_DOWN")
     left_key  = os.environ.get("RETRO_KEY_LEFT",  "KEY_LEFT")
     right_key = os.environ.get("RETRO_KEY_RIGHT", "KEY_RIGHT")
-    a_button  = os.environ.get("RETRO_KEY_A", "z")
+    a_button  = os.environ.get("RETRO_KEY_A",     "z")
+
+The second argument to ``os.environ.get`` is a fallback — the value to use
+when you're running your game on your own computer (where the console hasn't
+set those settings).
 
 Playing Sound Effects
 ---------------------
 
-The console can play MIDI sound effects while your game is running. To
-trigger a sound, call ``game.log()`` with a message in the format
-``play <sound_name>``:
+To play a sound, call ``game.log()`` with the message ``play`` followed by
+the sound name:
 
 .. code-block:: python
 
@@ -140,12 +164,13 @@ trigger a sound, call ``game.log()`` with a message in the format
     game.log("play success_large")
     game.log("play lose_a_life")
 
-The console watches your game's log file in real time and plays the
-matching ``.mid`` file through the speakers. If the sound file doesn't
-exist, the console logs a warning and your game continues unaffected.
+The console watches your game's log file while the game runs. When it sees
+a ``play`` message, it looks up the sound by name and plays it through the
+speakers. If the sound file doesn't exist, the console notes the problem in
+its own log and your game keeps running normally — sounds are never required.
 
-The following sounds are available. For guidance on implementing them,
-see the :doc:`sound_directory`.
+The sounds listed below are available in the default sounds package. For
+details on how they are created, see the :doc:`sound_designer` guide.
 
 .. list-table::
    :header-rows: 1
@@ -192,37 +217,33 @@ see the :doc:`sound_directory`.
    * - ``success_small``
      - A small positive event, such as collecting an item or scoring a point.
 
-Testing Your Game Locally
---------------------------
+Testing Your Game
+-----------------
 
-To test your game without the full console, run from inside your game's
-folder::
+To try your game without the full console, open a terminal inside your
+game's folder and run::
 
     uv run play
 
-This starts your game directly in the terminal. Press Ctrl-C to quit. The
-game won't have joystick mappings (``RETRO_KEY_*`` variables) unless you set
-them yourself, so the defaults from the ``retro`` library will be used
-(arrow keys and ``z``/``x``/``c``).
-
-To simulate the console environment::
-
-    RETRO_KEY_UP=KEY_UP RETRO_KEY_DOWN=KEY_DOWN RETRO_KEY_A=z uv run play
+This starts your game directly. Press Ctrl-C to quit. When running this
+way, the console hasn't set the ``RETRO_KEY_*`` settings, so the defaults
+from the ``retro`` library will be used (arrow keys and ``z``/``x``/``c``).
 
 Common Problems
 ---------------
 
+**My game doesn't appear on the game select screen**
+    The console checks games for errors when it starts up. Press any key
+    during the 2-second startup window to enter debug mode and see a list
+    of validation errors. The most common causes are: a missing or
+    misspelled field in ``pyproject.toml``, a missing ``play`` entry under
+    ``[project.scripts]``, or a library that failed to install.
+
 **"Missing tool.retro.result_file" error in debug mode**
     Your ``pyproject.toml`` is missing one of the required ``[tool.retro]``
-    keys. Check that ``name``, ``author``, ``description``, and
-    ``result_file`` are all present.
+    fields. Check that ``name``, ``author``, ``description``,
+    ``result_file``, and ``log_file`` are all present.
 
-**Game doesn't appear on the game select screen**
-    Enter debug mode (press any key during the 2-second startup window) to
-    see validation errors. Common causes: missing ``pyproject.toml``,
-    missing ``[project.scripts] play`` entry, or a dependency that failed
-    to install.
-
-**Score is not recorded**
+**The score isn't being saved**
     Make sure you pass ``dump_state="result.json"`` to ``Game()``. The
     ``retro`` library writes the score automatically when the game ends.
