@@ -124,33 +124,26 @@ A few things to note:
 Reading the Controls
 --------------------
 
-The physical gamepad buttons are different on every arcade setup, so the
-console passes the correct key names to your game as **settings** (called
-environment variables) when it starts your game. Think of it like the
-console leaving a note for your game that says "on this machine, the UP
-button is the up arrow key."
-
-These settings are named ``RETRO_KEY_UP``, ``RETRO_KEY_DOWN``,
-``RETRO_KEY_LEFT``, ``RETRO_KEY_RIGHT``, ``RETRO_KEY_A``, and so on up
-through ``RETRO_KEY_H``.
-
-The ``retro`` library's ``ArrowKeyAgent`` reads these automatically, so
-most of the time you don't need to think about this. If you are writing
-your own input handling, you can read the settings like this:
+The arcade joystick sends arrow keys, and the two rows of buttons send the
+keys ``z``, ``x``, ``c``, ``v`` (top row) and ``a``, ``s``, ``d``, ``f``
+(bottom row). You can hardcode these directly in your game:
 
 .. code-block:: python
 
-    import os
+    # Joystick
+    "KEY_UP"    # up
+    "KEY_DOWN"  # down
+    "KEY_LEFT"  # left
+    "KEY_RIGHT" # right
 
-    up_key    = os.environ.get("RETRO_KEY_UP",    "KEY_UP")
-    down_key  = os.environ.get("RETRO_KEY_DOWN",  "KEY_DOWN")
-    left_key  = os.environ.get("RETRO_KEY_LEFT",  "KEY_LEFT")
-    right_key = os.environ.get("RETRO_KEY_RIGHT", "KEY_RIGHT")
-    a_button  = os.environ.get("RETRO_KEY_A",     "z")
+    # Buttons, left to right
+    "a"  "s"  "d"  "f"   # top row
+    "z"  "x"  "c"  "v"   # bottom row
 
-The second argument to ``os.environ.get`` is a fallback — the value to use
-when you're running your game on your own computer (where the console hasn't
-set those settings).
+.. note::
+
+   Two-player games are not yet supported. Each game has access to one
+   joystick and one set of buttons.
 
 Playing Sound Effects
 ---------------------

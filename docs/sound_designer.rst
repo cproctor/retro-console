@@ -31,6 +31,12 @@ Your task is to create a **sounds directory** — a folder full of MIDI
 files, one for each sound effect. Each file is named after the sound it
 represents (for example, ``jump.mid`` or ``explode.mid``).
 
+The retro-console repository includes a default sounds directory (``sounds/``)
+with a basic implementation of every sound in the list. You can look at that
+folder to see what a finished sounds directory looks like — the right file
+names, extensions, and structure. Your goal is to replace those files with
+your own compositions.
+
 When a game needs a sound, the console looks in the sounds directory for a
 file with the matching name and plays it. The console comes with a basic
 set of sounds already included, but your sounds will replace them if you
@@ -57,8 +63,7 @@ extended.
    * - Name
      - When it plays
    * - ``theme_song``
-     - Loops on the Lockport Arcade loading screen. Stops after 60 seconds
-       of no input, or when the player presses a button.
+     - Loops on the Lockport Arcade loading screen. 
    * - ``start_game``
      - A game is launched from the select screen.
    * - ``move``
