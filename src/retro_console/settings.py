@@ -1,5 +1,6 @@
 """Settings for the retro console. Configure by editing this file."""
 
+import os
 from pathlib import Path
 
 # Screen dimensions
@@ -38,6 +39,18 @@ def _find_soundfont() -> Path | None:
     return None
 
 SOUNDFONT: Path | None = _find_soundfont()
+
+# FluidSynth audio driver. Auto-detected from running audio system.
+# Set explicitly to override (e.g. "alsa", "pulseaudio", "pipewire").
+def _find_audio_driver() -> str | None:
+    uid = os.getuid()
+    if Path(f"/run/user/{uid}/pipewire-0").exists():
+        return "pipewire"
+    if Path(f"/run/user/{uid}/pulse").exists():
+        return "pulseaudio"
+    return None
+
+FLUIDSYNTH_AUDIO_DRIVER: str | None = _find_audio_driver()
 
 # Directories to search (in order) for MIDI sound files.
 # Each entry is a Path to a directory containing .mid or .midi files.

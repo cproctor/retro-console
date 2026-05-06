@@ -5,11 +5,11 @@ from .manager import FruitManager
 import json
 
 WIDTH = 27
-HEIGHT = 30
+HEIGHT = 17  # retro view needs HEIGHT + 8 rows; xterm gives 25 rows
 
 def play():
     agents = [
-        Catcher((11, 28)),
+        Catcher((11, HEIGHT - 2)),
         FruitManager(),
     ]
     state = {'score': 0, 'lives': 5, 'slices': 3}
