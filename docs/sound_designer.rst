@@ -34,13 +34,8 @@ represents (for example, ``jump.mid`` or ``explode.mid``).
 The retro-console repository includes a default sounds directory (``sounds/``)
 with a basic implementation of every sound in the list. You can look at that
 folder to see what a finished sounds directory looks like — the right file
-names, extensions, and structure. Your goal is to replace those files with
-your own compositions.
-
-When a game needs a sound, the console looks in the sounds directory for a
-file with the matching name and plays it. The console comes with a basic
-set of sounds already included, but your sounds will replace them if you
-give your files the same names.
+names, extensions, and structure. Your goal is to create a new directory
+with the same named files, containing your own compositions.
 
 The Sound List
 --------------

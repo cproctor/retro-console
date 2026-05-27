@@ -8,3 +8,4 @@ retro_console.log
 **/log.txt
 docs/_build/
 .claude/
+.DS_Store
