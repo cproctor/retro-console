@@ -62,9 +62,6 @@ fi
 # Shared setup
 # ---------------------------------------------------------------------------
 
-echo "==> Initialising git submodules"
-(cd "$INSTALL_DIR" && git submodule update --init --recursive)
-
 echo "==> Syncing Python dependencies"
 (cd "$INSTALL_DIR" && uv sync)
 

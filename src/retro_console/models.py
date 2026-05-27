@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, ForeignKey, text
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 
 from retro_console import settings
@@ -22,9 +22,21 @@ class Game(Base):
     description = Column(String)
     play_count = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
+    single_player = Column(Boolean, default=True)
+    two_player = Column(Boolean, default=False)
 
     high_scores = relationship("HighScore", back_populates="game", order_by="HighScore.score.desc()", cascade="all, delete-orphan")
     plays = relationship("Play", back_populates="game", cascade="all, delete-orphan")
+
+    @property
+    def player_modes(self):
+        """Human-readable string describing supported player counts."""
+        modes = []
+        if self.single_player:
+            modes.append("1P")
+        if self.two_player:
+            modes.append("2P")
+        return " / ".join(modes) if modes else "Unknown"
 
     def get_top_scores(self, limit=10):
         """Get the top N high scores for this game."""
@@ -86,12 +98,22 @@ def get_session():
 
 
 def init_db():
-    """Initialize the database, creating tables if needed."""
+    """Initialize the database, creating tables if needed, and migrate existing ones."""
     engine = get_engine()
     Base.metadata.create_all(engine)
 
+    # Migrate: add single_player and two_player columns to existing databases.
+    with engine.connect() as conn:
+        for col, default in [("single_player", 1), ("two_player", 0)]:
+            try:
+                conn.execute(text(f"ALTER TABLE games ADD COLUMN {col} BOOLEAN DEFAULT {default}"))
+                conn.commit()
+            except Exception:
+                pass  # Column already exists
 
-def get_or_create_game(session, name, package_path, author=None, description=None):
+
+def get_or_create_game(session, name, package_path, author=None, description=None,
+                        single_player=True, two_player=False):
     """Get an existing game or create a new one."""
     game = session.query(Game).filter_by(package_path=package_path).first()
     if game is None:
@@ -100,6 +122,8 @@ def get_or_create_game(session, name, package_path, author=None, description=Non
             package_path=package_path,
             author=author,
             description=description,
+            single_player=single_player,
+            two_player=two_player,
         )
         session.add(game)
         session.commit()
@@ -107,6 +131,8 @@ def get_or_create_game(session, name, package_path, author=None, description=Non
         game.name = name
         game.author = author
         game.description = description
+        game.single_player = single_player
+        game.two_player = two_player
         session.commit()
     return game
 

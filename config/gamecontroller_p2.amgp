@@ -2,13 +2,18 @@
 <gamecontroller configversion="19" appversion="3.5.0">
     <!--The SDL name for a joystick is included for informational purposes only.-->
     <sdlname>USB gamepad</sdlname>
-    <!--The Unique ID for a joystick is included for informational purposes only.-->
-    <uniqueID>0300457e7900000006000000100100001216</uniqueID>
     <!--
-        Player 1 key mapping:
-          Joystick up/down/left/right → w / s / a / d
-          Row 1 red/yellow/green/blue → space / g / h / j  (P1_A/B/C/D)
-          Row 2 red/yellow/green/blue → t / y / u / i      (P1_E/F/G/H)
+        IMPORTANT: Replace the uniqueID below with the actual ID of the Player 2
+        controller.  Run `antimicrox` with the controller connected, open the
+        profile editor, and copy the Unique ID shown in the device info panel.
+        If the ID is wrong, antimicrox will silently ignore this profile.
+    -->
+    <uniqueID>REPLACE_WITH_P2_CONTROLLER_UNIQUE_ID</uniqueID>
+    <!--
+        Player 2 key mapping:
+          Joystick up/down/left/right → 8 / 2 / 4 / 6
+          Row 1 red/yellow/green/blue → enter / k / l / ;  (P2_A/B/C/D)
+          Row 2 red/yellow/green/blue → o / p / [ / ]      (P2_E/F/G/H)
     -->
     <stickAxisAssociation index="1" xAxis="1" yAxis="2"/>
     <stickAxisAssociation index="2" xAxis="3" yAxis="4"/>
@@ -25,38 +30,38 @@
     <sets>
         <set index="1">
             <stick index="1">
-                <!-- index 1 = up → w (0x57) -->
+                <!-- index 1 = up → 8 (0x38) -->
                 <stickbutton index="1">
                     <slots>
                         <slot>
-                            <code>0x57</code>
+                            <code>0x38</code>
                             <mode>keyboard</mode>
                         </slot>
                     </slots>
                 </stickbutton>
-                <!-- index 3 = right → d (0x44) -->
+                <!-- index 3 = right → 6 (0x36) -->
                 <stickbutton index="3">
                     <slots>
                         <slot>
-                            <code>0x44</code>
+                            <code>0x36</code>
                             <mode>keyboard</mode>
                         </slot>
                     </slots>
                 </stickbutton>
-                <!-- index 5 = down → s (0x53) -->
+                <!-- index 5 = down → 2 (0x32) -->
                 <stickbutton index="5">
                     <slots>
                         <slot>
-                            <code>0x53</code>
+                            <code>0x32</code>
                             <mode>keyboard</mode>
                         </slot>
                     </slots>
                 </stickbutton>
-                <!-- index 7 = left → a (0x41) -->
+                <!-- index 7 = left → 4 (0x34) -->
                 <stickbutton index="7">
                     <slots>
                         <slot>
-                            <code>0x41</code>
+                            <code>0x34</code>
                             <mode>keyboard</mode>
                         </slot>
                     </slots>
@@ -68,74 +73,74 @@
             <trigger index="6">
                 <throttle>positivehalf</throttle>
             </trigger>
-            <!-- Row 1 red   → P1_A → space (0x20) -->
+            <!-- Row 1 red    → P2_A → Return (0x01000004) -->
             <button index="4">
                 <slots>
                     <slot>
-                        <code>0x20</code>
+                        <code>0x01000004</code>
                         <mode>keyboard</mode>
                     </slot>
                 </slots>
             </button>
-            <!-- Row 1 yellow → P1_B → g (0x47) -->
+            <!-- Row 1 yellow → P2_B → k (0x4b) -->
             <button index="2">
                 <slots>
                     <slot>
-                        <code>0x47</code>
+                        <code>0x4b</code>
                         <mode>keyboard</mode>
                     </slot>
                 </slots>
             </button>
-            <!-- Row 1 green  → P1_C → h (0x48) -->
+            <!-- Row 1 green  → P2_C → l (0x4c) -->
             <button index="1">
                 <slots>
                     <slot>
-                        <code>0x48</code>
+                        <code>0x4c</code>
                         <mode>keyboard</mode>
                     </slot>
                 </slots>
             </button>
-            <!-- Row 1 blue   → P1_D → j (0x4a) -->
+            <!-- Row 1 blue   → P2_D → ; (0x3b) -->
             <button index="3">
                 <slots>
                     <slot>
-                        <code>0x4a</code>
+                        <code>0x3b</code>
                         <mode>keyboard</mode>
                     </slot>
                 </slots>
             </button>
-            <!-- Row 2 red    → P1_E → t (0x54) -->
+            <!-- Row 2 red    → P2_E → o (0x4f) -->
             <button index="10">
                 <slots>
                     <slot>
-                        <code>0x54</code>
+                        <code>0x4f</code>
                         <mode>keyboard</mode>
                     </slot>
                 </slots>
             </button>
-            <!-- Row 2 yellow → P1_F → y (0x59) -->
+            <!-- Row 2 yellow → P2_F → p (0x50) -->
             <button index="11">
                 <slots>
                     <slot>
-                        <code>0x59</code>
+                        <code>0x50</code>
                         <mode>keyboard</mode>
                     </slot>
                 </slots>
             </button>
-            <!-- Row 2 green  → P1_G → u (0x55) -->
+            <!-- Row 2 green  → P2_G → [ (0x5b) -->
             <button index="5">
                 <slots>
                     <slot>
-                        <code>0x55</code>
+                        <code>0x5b</code>
                         <mode>keyboard</mode>
                     </slot>
                 </slots>
             </button>
-            <!-- Row 2 blue   → P1_H → i (0x49) -->
+            <!-- Row 2 blue   → P2_H → ] (0x5d) -->
             <button index="7">
                 <slots>
                     <slot>
-                        <code>0x49</code>
+                        <code>0x5d</code>
                         <mode>keyboard</mode>
                     </slot>
                 </slots>

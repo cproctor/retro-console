@@ -65,18 +65,20 @@ class SnakeHead:
             game.end()
 
     def handle_keystroke(self, keystroke, game):
-        """Checks whether one of the arrow keys has been pressed.
+        """Checks whether one of the directional keys has been pressed.
         If so, sets the SnakeHead's direction and character.
         """
+        import os
         key_map = {
-            "KEY_RIGHT": (self.RIGHT, '>'),
-            "KEY_UP":    (self.UP,    '^'),
-            "KEY_LEFT":  (self.LEFT,  '<'),
-            "KEY_DOWN":  (self.DOWN,  'v'),
+            os.environ.get("RETRO_KEY_P1_RIGHT", "d"): (self.RIGHT, '>'),
+            os.environ.get("RETRO_KEY_P1_UP",    "w"): (self.UP,    '^'),
+            os.environ.get("RETRO_KEY_P1_LEFT",  "a"): (self.LEFT,  '<'),
+            os.environ.get("RETRO_KEY_P1_DOWN",  "s"): (self.DOWN,  'v'),
         }
-        if keystroke.name not in key_map:
+        key = keystroke.name or str(keystroke)
+        if key not in key_map:
             return
-        new_direction, new_character = key_map[keystroke.name]
+        new_direction, new_character = key_map[key]
         x, y = self.position
         dx, dy = new_direction
         if self.next_segment and self.next_segment.position == (x + dx, y + dy):

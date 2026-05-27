@@ -6,6 +6,11 @@ PartOf=graphical-session.target
 
 [Service]
 Type=simple
+# Player 1 profile is always loaded.  Once the Player 2 controller's uniqueID
+# is known and filled in to gamecontroller_p2.amgp, add a second --profile flag:
+#   --profile /opt/retro-console/config/gamecontroller_p2.amgp
+# antimicrox matches each profile to the controller by uniqueID; an unconnected
+# controller is silently ignored, so loading both profiles is always safe.
 ExecStart=antimicrox --profile /opt/retro-console/config/gamecontroller.amgp --hidden
 Restart=on-failure
 RestartSec=3

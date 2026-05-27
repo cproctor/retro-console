@@ -87,26 +87,170 @@ pulls the latest code from the internet, finds all the games in the
 Controls
 ~~~~~~~~
 
-The console is designed for a USB gamepad. The gamepad buttons are mapped
-to keyboard keys by antimicrox using the following defaults (you can change
-these in ``settings.py`` if your gamepad is wired differently):
+The console uses two USB gamepads — one for each player. The gamepad buttons
+are translated to keyboard keys by **antimicrox** using the profiles in
+``config/``. Either player can navigate the console menus.
 
-======= ==================
-Button  Key
-======= ==================
-UP      Arrow Up
-DOWN    Arrow Down
-LEFT    Arrow Left
-RIGHT   Arrow Right
-A       z
-B       x
-C       c
-D       v
-======= ==================
+.. list-table::
+   :header-rows: 1
+   :widths: 15 15 15 15
+
+   * - Button
+     - Logical name
+     - Player 1 key
+     - Player 2 key
+   * - Joystick up
+     - UP
+     - ``w``
+     - ``8``
+   * - Joystick down
+     - DOWN
+     - ``s``
+     - ``2``
+   * - Joystick left
+     - LEFT
+     - ``a``
+     - ``4``
+   * - Joystick right
+     - RIGHT
+     - ``d``
+     - ``6``
+   * - Row 1 red (A)
+     - A
+     - ``space``
+     - ``enter``
+   * - Row 1 yellow (B)
+     - B
+     - ``g``
+     - ``k``
+   * - Row 1 green (C)
+     - C
+     - ``h``
+     - ``l``
+   * - Row 1 blue (D)
+     - D
+     - ``j``
+     - ``;``
+   * - Row 2 red (E)
+     - E
+     - ``t``
+     - ``o``
+   * - Row 2 yellow (F)
+     - F
+     - ``y``
+     - ``p``
+   * - Row 2 green (G)
+     - G
+     - ``u``
+     - ``[``
+   * - Row 2 blue (H)
+     - H
+     - ``i``
+     - ``]``
 
 On the **game select screen**: press UP or DOWN to scroll through games and
 press **A** to launch one. If nobody touches the controls for 60 seconds, the
 screen returns to the loading screen automatically.
+
+Updating the key mapping
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you change ``KEY_MAPPING`` in ``settings.py`` or update the antimicrox
+profile files, antimicrox must be restarted for the changes to take effect::
+
+    systemctl --user restart antimicrox
+
+The console does this automatically at startup whenever it detects that a
+profile file is newer than antimicrox's last start.
+
+Setting up the Player 2 controller
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The Player 2 antimicrox profile is stored in
+``config/gamecontroller_p2.amgp``. Before it will work, you need to fill in
+the Player 2 controller's unique ID:
+
+1. Connect the Player 2 USB gamepad.
+2. Open ``antimicrox`` in the graphical interface.
+3. Select the Player 2 controller and note its **Unique ID**.
+4. Open ``config/gamecontroller_p2.amgp`` in a text editor and replace
+   ``REPLACE_WITH_P2_CONTROLLER_UNIQUE_ID`` with the actual ID.
+5. Update ``config/systemd/antimicrox.service`` to add a second
+   ``--profile`` flag pointing to ``gamecontroller_p2.amgp`` (instructions
+   are in a comment inside that file).
+6. Re-run ``bash config/install.sh`` and restart the services.
+
+Adding Games
+------------
+
+Games live in the ``games/`` folder as regular Python packages. The console
+finds and loads them automatically on startup.
+
+.. note::
+
+   Do not add games as git submodules. Keep them as plain files inside the
+   repo. Submodules add complexity and can expose student information (git
+   commit authors and email addresses) that should stay private.
+
+Step-by-step: adding a student game
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+These steps are written for a teacher who has received a game from a student
+and wants to add it to the arcade.
+
+1. **Copy the game into the** ``games/`` **folder.**
+
+   Give the subfolder a short, lowercase name with no spaces, for example::
+
+       games/student-pong/
+
+   The folder should contain at least a ``pyproject.toml`` and the game's
+   Python source code.
+
+2. **Check** ``pyproject.toml`` **for required fields.**
+
+   Open ``games/student-pong/pyproject.toml`` and verify that the
+   ``[tool.retro]`` section contains at minimum:
+
+   .. code-block:: toml
+
+       [tool.retro]
+       name = "Student Pong"
+       author = "Student Name"
+       description = "A short description."
+       result_file = "result.json"
+       single_player = true
+
+   If any of these are missing, add them. If neither ``single_player`` nor
+   ``two_player`` is set the console will still load the game (defaulting to
+   ``single_player = true``) but will log a warning.
+
+3. **Commit the game to the repository.**::
+
+       git add games/student-pong
+       git commit -m "Add student-pong game"
+       git push
+
+4. **Restart the console** (or wait for the Pi to reboot). The console
+   pulls the latest code and discovers the new game automatically. You can
+   also press **B** on the game select screen to trigger an immediate rescan
+   without restarting.
+
+Troubleshooting a game that won't appear
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Press any key during the 2-second startup window to enter **debug mode**.
+Debug mode shows the validation result for every game in the ``games/``
+folder, including specific error messages. Common issues:
+
+- **Missing field in** ``[tool.retro]`` — add the missing key.
+- **Missing** ``[project.scripts] play = "..."`` — the console needs this to
+  know how to launch the game.
+- **Dependency install failed** — the game's ``pyproject.toml`` may require
+  a package that can't be installed on the Pi. Check the error message and
+  simplify the dependency list if needed.
+- **Syntax error in** ``pyproject.toml`` — validate the TOML with an online
+  checker.
 
 Debug Mode
 ----------
@@ -168,6 +312,11 @@ restart the service for them to take effect.
      - ``Path("retro_console.log")``
      - File where the console writes its own activity log, useful for
        diagnosing problems.
+   * - ``KEY_MAPPING``
+     - see table above
+     - Maps logical button names (``P1_UP``, ``P2_A``, …) to keyboard key
+       strings. After changing this, restart antimicrox (the console does
+       this automatically on the next startup).
    * - ``SOUNDFONT``
      - auto-detected
      - The instrument library used for MIDI sound playback. The install

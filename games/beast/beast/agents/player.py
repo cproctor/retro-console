@@ -2,10 +2,10 @@ import os
 from beast.helpers import add, get_occupant
 
 direction_vectors = {
-    os.environ.get("RETRO_KEY_RIGHT", "KEY_RIGHT"): (1, 0),
-    os.environ.get("RETRO_KEY_UP", "KEY_UP"): (0, -1),
-    os.environ.get("RETRO_KEY_LEFT", "KEY_LEFT"): (-1, 0),
-    os.environ.get("RETRO_KEY_DOWN", "KEY_DOWN"): (0, 1),
+    os.environ.get("RETRO_KEY_P1_RIGHT", "d"): (1, 0),
+    os.environ.get("RETRO_KEY_P1_UP",    "w"): (0, -1),
+    os.environ.get("RETRO_KEY_P1_LEFT",  "a"): (-1, 0),
+    os.environ.get("RETRO_KEY_P1_DOWN",  "s"): (0, 1),
 }
 
 class Player:
@@ -24,9 +24,9 @@ class Player:
 
     def try_to_move(self, vector, game):
         """Tries to move the player in the direction of vector.
-        If the space is empty and it's on the board, then the move succeeds. 
+        If the space is empty and it's on the board, then the move succeeds.
         If the space is occupied, then if the occupant can be pushed, it gets
-        pushed and the move succeeds. Otherwise, the move fails. 
+        pushed and the move succeeds. Otherwise, the move fails.
         """
         future_position = add(self.position, vector)
         on_board = game.on_board(future_position)
@@ -44,4 +44,3 @@ class Player:
     def die(self, game):
         manager = game.get_agent_by_name("manager")
         manager.respawn_player(game)
-

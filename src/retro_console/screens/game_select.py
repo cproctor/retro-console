@@ -88,6 +88,10 @@ class GameSelectScreen(Screen):
 
         # Author
         print(self.move(x, line) + f"Author: {game.author or 'Unknown'}")
+        line += 1
+
+        # Player modes
+        print(self.move(x, line) + f"Players: {game.player_modes}")
         line += 2
 
         # Description - word wrap
@@ -117,7 +121,6 @@ class GameSelectScreen(Screen):
             line += 1
 
         # Instructions at bottom
-        t = self.terminal
         print(self.move(x, self.height - 2) + t.red + "[A] Play" + t.normal + "  [UP/DOWN] Select  [B] Refresh")
 
     def _wrap_text(self, text, width):
@@ -147,30 +150,31 @@ class GameSelectScreen(Screen):
 
         while True:
             raw_key, logical_key = self.input_handler.read_key(timeout=timeout)
+            action = settings.get_ui_action(logical_key)
 
             # Timeout - return to splash
             if raw_key is None:
                 return "splash"
 
-            if logical_key == "UP":
+            if action == "UP":
                 if self.selected_index > 0:
                     self.selected_index -= 1
                     self.app.sound_manager.play("move")
                     self.clear()
                     self.draw()
 
-            elif logical_key == "DOWN":
+            elif action == "DOWN":
                 if self.selected_index < len(self.games) - 1:
                     self.selected_index += 1
                     self.app.sound_manager.play("move")
                     self.clear()
                     self.draw()
 
-            elif logical_key == "A":
+            elif action == "A":
                 if self.games:
                     return self._play_selected_game()
 
-            elif logical_key == "B":
+            elif action == "B":
                 self._refresh_games()
                 self.clear()
                 self.draw()
@@ -193,7 +197,7 @@ class GameSelectScreen(Screen):
         self.clear()
         self.center_text(f"Starting {game.name}...", self.height // 2)
 
-        success, score = run_game(game, self.app.session, self.app.sound_manager)
+        success, score, winner = run_game(game, self.app.session, self.app.sound_manager)
 
         # Restore terminal state after subprocess (game's blessed context emits show-cursor on exit)
         print(self.terminal.normal + self.terminal.hide_cursor, end='', flush=True)
@@ -205,10 +209,11 @@ class GameSelectScreen(Screen):
         self.app.selected_game_index = self.selected_index
 
         if score is not None and game.is_high_score(score):
-            # Store for high score entry
+            # Store for high score entry; default winner to player 1 if not specified
             self.app.pending_high_score = {
                 "game": game,
                 "score": score,
+                "winner": winner if winner in (1, 2) else 1,
             }
             return "high_score"
 

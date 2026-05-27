@@ -16,6 +16,7 @@ author = "Claude"
 description = "Beat the dealer to 21. Start with $100, win or lose $10 per hand."
 instructions = "Left/Right to choose action, A or Enter to confirm."
 result_file = "result.json"
+single_player = true
 
 [build-system]
 requires = ["hatchling"]

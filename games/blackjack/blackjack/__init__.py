@@ -51,9 +51,9 @@ def _is_blackjack(cards):
 def main():
     term = blessed.Terminal()
 
-    left_key = os.environ.get('RETRO_KEY_LEFT', 'KEY_LEFT')
-    right_key = os.environ.get('RETRO_KEY_RIGHT', 'KEY_RIGHT')
-    confirm_key = os.environ.get('RETRO_KEY_A', 'z')
+    left_key = os.environ.get('RETRO_KEY_P1_LEFT', 'a')
+    right_key = os.environ.get('RETRO_KEY_P1_RIGHT', 'd')
+    confirm_key = os.environ.get('RETRO_KEY_P1_A', ' ')
 
     cash = 100
     peak = 100

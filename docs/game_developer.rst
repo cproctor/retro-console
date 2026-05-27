@@ -60,6 +60,7 @@ Here is a template you can copy and fill in:
     description = "A short description shown on the game select screen."
     result_file = "result.json"
     log_file = "game.log"
+    single_player = true
 
     [build-system]
     requires = ["hatchling"]
@@ -80,9 +81,13 @@ The parts that matter most:
     your ``main()`` function.
 
 ``[tool.retro]``
-    The console reads these five fields to register your game. All five are
-    required: ``name``, ``author``, ``description``, ``result_file``, and
-    ``log_file``.
+    The console reads these fields to register your game:
+
+    - ``name``, ``author``, ``description``, ``result_file`` — required.
+    - ``log_file`` — optional; enables sound effect syncing (see below).
+    - ``single_player`` / ``two_player`` — at least one must be ``true``.
+      If neither is set, the console defaults to ``single_player = true``
+      and logs a warning. See `Two-Player Games`_ for details.
 
 Writing Your ``main()`` Function
 ---------------------------------
@@ -124,26 +129,130 @@ A few things to note:
 Reading the Controls
 --------------------
 
-The arcade joystick sends arrow keys, and the two rows of buttons send the
-keys ``z``, ``x``, ``c``, ``v`` (top row) and ``a``, ``s``, ``d``, ``f``
-(bottom row). You can hardcode these directly in your game:
+The console injects the current key mapping into your game as environment
+variables when it launches. Use these instead of hardcoding keys directly —
+this way your game works correctly even if the key mapping ever changes.
+
+Each variable is named ``RETRO_KEY_<LOGICAL>`` where ``<LOGICAL>`` is the
+player-prefixed button name. For example:
 
 .. code-block:: python
 
-    # Joystick
-    "KEY_UP"    # up
-    "KEY_DOWN"  # down
-    "KEY_LEFT"  # left
-    "KEY_RIGHT" # right
+    import os
 
-    # Buttons, left to right
-    "a"  "s"  "d"  "f"   # top row
-    "z"  "x"  "c"  "v"   # bottom row
+    KEY_UP    = os.environ.get("RETRO_KEY_P1_UP",    "w")
+    KEY_DOWN  = os.environ.get("RETRO_KEY_P1_DOWN",  "s")
+    KEY_LEFT  = os.environ.get("RETRO_KEY_P1_LEFT",  "a")
+    KEY_RIGHT = os.environ.get("RETRO_KEY_P1_RIGHT", "d")
+    KEY_A     = os.environ.get("RETRO_KEY_P1_A",     " ")  # space
 
-.. note::
+The full key mapping is:
 
-   Two-player games are not yet supported. Each game has access to one
-   joystick and one set of buttons.
+.. list-table::
+   :header-rows: 1
+   :widths: 20 20 20 20 20
+
+   * - Button
+     - Logical name
+     - P1 key
+     - P2 key
+     - Env var (P1)
+   * - Joystick up
+     - UP
+     - ``w``
+     - ``8``
+     - ``RETRO_KEY_P1_UP``
+   * - Joystick down
+     - DOWN
+     - ``s``
+     - ``2``
+     - ``RETRO_KEY_P1_DOWN``
+   * - Joystick left
+     - LEFT
+     - ``a``
+     - ``4``
+     - ``RETRO_KEY_P1_LEFT``
+   * - Joystick right
+     - RIGHT
+     - ``d``
+     - ``6``
+     - ``RETRO_KEY_P1_RIGHT``
+   * - Row 1 red
+     - A
+     - ``space``
+     - ``enter``
+     - ``RETRO_KEY_P1_A``
+   * - Row 1 yellow
+     - B
+     - ``g``
+     - ``k``
+     - ``RETRO_KEY_P1_B``
+   * - Row 1 green
+     - C
+     - ``h``
+     - ``l``
+     - ``RETRO_KEY_P1_C``
+   * - Row 1 blue
+     - D
+     - ``j``
+     - ``;``
+     - ``RETRO_KEY_P1_D``
+   * - Row 2 red
+     - E
+     - ``t``
+     - ``o``
+     - ``RETRO_KEY_P1_E``
+   * - Row 2 yellow
+     - F
+     - ``y``
+     - ``p``
+     - ``RETRO_KEY_P1_F``
+   * - Row 2 green
+     - G
+     - ``u``
+     - ``[``
+     - ``RETRO_KEY_P1_G``
+   * - Row 2 blue
+     - H
+     - ``i``
+     - ``]``
+     - ``RETRO_KEY_P1_H``
+
+Substitute ``P2`` for ``P1`` in the env var names to get the Player 2 keys
+(e.g. ``RETRO_KEY_P2_UP``).
+
+Two-Player Games
+----------------
+
+Declaring player support
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In your ``pyproject.toml``, set one or both of:
+
+.. code-block:: toml
+
+    [tool.retro]
+    single_player = true   # game can be played by one player
+    two_player = true      # game can be played by two players
+
+The game select screen shows this information to players. The console does
+not manage which mode is active — that is entirely up to your game. Many
+games support both modes and switch based on whether a second player's input
+is detected at the start.
+
+Result file for two-player games
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When your game ends, it writes ``result.json``. For two-player games, you
+may optionally include a ``"winner"`` key:
+
+.. code-block:: json
+
+    {"score": 1234, "winner": 2}
+
+``winner`` must be ``1`` or ``2``. When present, the console hands control
+of the high-score entry screen to that player (using their key mapping).
+When absent or invalid, Player 1 enters the initials by default.
 
 Playing Sound Effects
 ---------------------
@@ -219,8 +328,9 @@ game's folder and run::
     uv run play
 
 This starts your game directly. Press Ctrl-C to quit. When running this
-way, the console hasn't set the ``RETRO_KEY_*`` settings, so the defaults
-from the ``retro`` library will be used (arrow keys and ``z``/``x``/``c``).
+way, the console hasn't set the ``RETRO_KEY_*`` environment variables, so
+use ``os.environ.get("RETRO_KEY_P1_UP", "w")``-style fallbacks (as shown
+above) to keep your game playable in both contexts.
 
 Common Problems
 ---------------
@@ -234,9 +344,14 @@ Common Problems
 
 **"Missing tool.retro.result_file" error in debug mode**
     Your ``pyproject.toml`` is missing one of the required ``[tool.retro]``
-    fields. Check that ``name``, ``author``, ``description``,
-    ``result_file``, and ``log_file`` are all present.
+    fields. Check that ``name``, ``author``, ``description``, and
+    ``result_file`` are all present.
 
 **The score isn't being saved**
     Make sure you pass ``dump_state="result.json"`` to ``Game()``. The
     ``retro`` library writes the score automatically when the game ends.
+
+**The winner isn't getting the high-score screen**
+    Check that your ``result.json`` includes ``"winner": 1`` or
+    ``"winner": 2`` (an integer, not a string). If the value is missing,
+    invalid, or the wrong type, the console defaults to Player 1.

@@ -17,6 +17,7 @@ description = "Push blocks to squish the beasties. Don't let them catch you!"
 instructions = "Use the arrow keys to push blocks. Squish beasts between blocks."
 result_file = "result.json"
 log_file = "game.log"
+single_player = true
 
 [build-system]
 requires = ["hatchling"]

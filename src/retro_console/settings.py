@@ -56,31 +56,81 @@ FLUIDSYNTH_AUDIO_DRIVER: str | None = _find_audio_driver()
 # Each entry is a Path to a directory containing .mid or .midi files.
 SOUNDS_DIRS: list[Path] = [Path("sounds")]
 
-# Key mapping: logical button names to keyboard key names
+# Key mapping: logical button names (P1_/P2_ prefixed) to keyboard key strings.
+#
+# Values are what blessed returns: key.name for sequences (e.g. "KEY_ENTER"),
+# or str(key) for regular characters (e.g. "w", " ", "\n").
+#
+# Physical layout:
+#   Joystick directions → UP / DOWN / LEFT / RIGHT
+#   Row 1 buttons (red / yellow / green / blue) → A / B / C / D
+#   Row 2 buttons (red / yellow / green / blue) → E / F / G / H
+#
+# Player 1:
+#   Joystick → w / s / a / d
+#   Row 1    → space / g / h / j
+#   Row 2    → t / y / u / i
+#
+# Player 2:
+#   Joystick → 8 / 2 / 4 / 6
+#   Row 1    → enter / k / l / ;
+#   Row 2    → o / p / [ / ]
 KEY_MAPPING = {
-    # Joystick directions
-    "UP": "KEY_UP",
-    "LEFT": "KEY_LEFT",
-    "DOWN": "KEY_DOWN",
-    "RIGHT": "KEY_RIGHT",
-    # Action buttons
-    "A": "z",
-    "B": "x",
-    "C": "c",
-    "D": "v",
-    "E": "a",
-    "F": "s",
-    "G": "d",
-    "H": "f",
+    # Player 1 — joystick
+    "P1_UP":    "w",
+    "P1_DOWN":  "s",
+    "P1_LEFT":  "a",
+    "P1_RIGHT": "d",
+    # Player 1 — Row 1 buttons
+    "P1_A": " ",    # red
+    "P1_B": "g",    # yellow
+    "P1_C": "h",    # green
+    "P1_D": "j",    # blue
+    # Player 1 — Row 2 buttons
+    "P1_E": "t",    # red
+    "P1_F": "y",    # yellow
+    "P1_G": "u",    # green
+    "P1_H": "i",    # blue
+    # Player 2 — joystick
+    "P2_UP":    "8",
+    "P2_DOWN":  "2",
+    "P2_LEFT":  "4",
+    "P2_RIGHT": "6",
+    # Player 2 — Row 1 buttons
+    "P2_A": "\n",   # red   — enter
+    "P2_B": "k",    # yellow
+    "P2_C": "l",    # green
+    "P2_D": ";",    # blue
+    # Player 2 — Row 2 buttons
+    "P2_E": "o",    # red
+    "P2_F": "p",    # yellow
+    "P2_G": "[",    # green
+    "P2_H": "]",    # blue
 }
 
-# Reverse mapping for quick lookup
-_KEY_TO_LOGICAL = {v: k for k, v in KEY_MAPPING.items()}
+
+def get_ui_action(logical_key):
+    """Strip the P1_/P2_ player prefix to get the generic action for UI navigation.
+
+    Both 'P1_UP' and 'P2_UP' return 'UP', so all console screens respond
+    identically to either player's input.  Returns None if logical_key is None.
+    """
+    if logical_key is None:
+        return None
+    if logical_key.startswith(("P1_", "P2_")):
+        return logical_key[3:]
+    return logical_key
 
 
-def get_logical_key(key_name):
-    """Convert a keyboard key name to a logical button name."""
-    return _KEY_TO_LOGICAL.get(key_name)
+def get_player(logical_key):
+    """Return 1, 2, or None based on the player prefix of a logical key."""
+    if logical_key is None:
+        return None
+    if logical_key.startswith("P1_"):
+        return 1
+    if logical_key.startswith("P2_"):
+        return 2
+    return None
 
 
 def get_forbidden_words():

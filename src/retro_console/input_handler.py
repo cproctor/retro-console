@@ -19,6 +19,7 @@ class InputHandler:
     def read_key(self, timeout=None):
         """Read a key press and return (raw_key, logical_key) tuple.
 
+        logical_key is a P1_/P2_-prefixed name such as 'P1_UP' or 'P2_A'.
         Returns (None, None) if timeout expires with no input.
         """
         with self.terminal.cbreak():
@@ -48,6 +49,8 @@ class InputHandler:
         """Wait for a logical key press.
 
         If allowed_keys is specified, only return when one of those keys is pressed.
+        Keys may be full names ('P1_UP') or bare actions ('UP') — bare actions
+        match input from either player.
         Returns the logical key name, or None on timeout.
         """
         while True:
@@ -59,9 +62,9 @@ class InputHandler:
             if logical_key is None:
                 continue
 
-            if allowed_keys is None or logical_key in allowed_keys:
+            if allowed_keys is None:
                 return logical_key
 
-    def is_debug_key(self, raw_key):
-        """Check if the given key is the debug key."""
-        return raw_key == settings.DEBUG_KEY
+            action = settings.get_ui_action(logical_key)
+            if logical_key in allowed_keys or action in allowed_keys:
+                return logical_key

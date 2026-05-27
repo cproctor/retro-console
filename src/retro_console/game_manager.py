@@ -35,7 +35,10 @@ class GameValidationResult:
         self.description = None
         self.play_script = None
         self.result_file = None
-        self.log_file = None  # optional; relative to the game directory
+        self.log_file = None       # optional; relative to the game directory
+        self.single_player = True  # default
+        self.two_player = False    # default
+
 
     def add_error(self, error):
         self.errors.append(error)
@@ -97,6 +100,21 @@ def validate_game(game_path):
         result.log_file = retro["log_file"]
     else:
         log.warning("game_no_log_file", game=game_path.name)
+
+    # Player mode: default to single_player=True if neither is specified.
+    single_player = retro.get("single_player")
+    two_player = retro.get("two_player")
+    if single_player is None and two_player is None:
+        log.warning(
+            "game_no_player_mode_specified",
+            game=game_path.name,
+            msg="Neither single_player nor two_player set; defaulting to single_player=true",
+        )
+        result.single_player = True
+        result.two_player = False
+    else:
+        result.single_player = bool(single_player)
+        result.two_player = bool(two_player)
 
     # If no errors so far, mark as valid
     if not result.errors:
@@ -176,6 +194,8 @@ def register_games(valid_games, session=None):
             package_path=str(game_result.path),
             author=game_result.author,
             description=game_result.description,
+            single_player=game_result.single_player,
+            two_player=game_result.two_player,
         )
         db_games.append(db_game)
 
@@ -216,7 +236,10 @@ def _watch_log(log_file: Path, sound_manager: "SoundManager", stop: threading.Ev
 
 
 def run_game(game, session=None, sound_manager: "SoundManager | None" = None):
-    """Run a game and return (success, score). score may be None."""
+    """Run a game and return (success, score, winner).
+
+    score may be None.  winner is 1, 2, or None (None means player 1 by default).
+    """
     game_path = Path(game.package_path)
 
     result_file = game_path / "result.json"
@@ -270,18 +293,23 @@ def run_game(game, session=None, sound_manager: "SoundManager | None" = None):
 
     except Exception as e:
         log.error("game_launch_error", game=game.name, error=str(e))
-        return (False, None)
+        return (False, None, None)
     finally:
         stop_watch.set()
         if watch_thread is not None:
             watch_thread.join(timeout=2)
 
+    # Read result.json for score and optional winner
     score = None
+    winner = None
     if result_file.exists():
         try:
             with open(result_file) as f:
                 data = json.load(f)
-                score = data.get("score")
+            score = data.get("score")
+            raw_winner = data.get("winner")
+            if raw_winner in (1, 2):
+                winner = raw_winner
         except Exception:
             pass
 
@@ -289,8 +317,8 @@ def run_game(game, session=None, sound_manager: "SoundManager | None" = None):
         session = get_session()
     record_play(session, game, score)
 
-    log.info("game_end", game=game.name, score=score)
-    return (True, score)
+    log.info("game_end", game=game.name, score=score, winner=winner)
+    return (True, score, winner)
 
 
 def save_high_score(game, initials, score, session=None):

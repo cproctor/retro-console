@@ -50,19 +50,24 @@ class Catcher:
             self.create_pieces(game)
 
     def handle_keystroke(self, keystroke, game):
+        import os
+        left_key  = os.environ.get("RETRO_KEY_P1_LEFT",  "a")
+        right_key = os.environ.get("RETRO_KEY_P1_RIGHT", "d")
+        slice_key = os.environ.get("RETRO_KEY_P1_A",     " ")
+        key = keystroke.name or str(keystroke)
         x, y = self.position
         width, height = game.board_size
-        if keystroke.name == "KEY_LEFT":
+        if key == left_key:
             new_x = max(0, x - 3)
             self.position = (new_x, y)
             self.update_piece_positions()
             self.check_fruit_collisions(game)
-        if keystroke.name == "KEY_RIGHT":
+        if key == right_key:
             new_x = min(width - self.width, x + 3)
             self.position = (new_x, y)
             self.update_piece_positions()
             self.check_fruit_collisions(game)
-        if str(keystroke) == 'z' and game.state['slices'] > 0:
+        if key == slice_key and game.state['slices'] > 0:
             game.log("play success_medium")
             game.state['slices'] -= 1
             game.add_agent(SliceEffect(game))

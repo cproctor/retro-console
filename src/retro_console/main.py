@@ -1,8 +1,12 @@
 """Main entry point for the retro console."""
 
+import calendar
 import os
+import platform
+import re
 import subprocess
 import sys
+from pathlib import Path
 
 from blessed import Terminal
 
@@ -13,6 +17,9 @@ from retro_console.input_handler import InputHandler
 from retro_console.game_manager import discover_games, register_games
 from retro_console.screens import SplashScreen, GameSelectScreen, HighScoreScreen
 from retro_console.sound_manager import SoundManager
+
+# Installed antimicrox profile directory (Linux/Pi only).
+_ANTIMICROX_CONFIG_DIR = Path("/opt/retro-console/config")
 
 
 class SetupError(Exception):
@@ -62,24 +69,81 @@ class RetroConsoleApp:
             self._status(f"Git pull error: {e}")
             self.log.error("git_pull_error", error=str(e))
 
+    def check_antimicrox_config(self):
+        """Restart antimicrox if any profile is newer than the last service start.
+
+        Compares the mtime of every .amgp file in the installed config directory
+        against the ActiveEnterTimestamp reported by systemctl.  If the config is
+        newer, antimicrox is restarted so it picks up the updated key mapping.
+
+        This only runs on Linux (the Pi); it is silently skipped on macOS.
+        """
+        if platform.system() != "Linux":
+            return
+
+        if not _ANTIMICROX_CONFIG_DIR.exists():
+            return
+
+        profiles = list(_ANTIMICROX_CONFIG_DIR.glob("*.amgp"))
+        if not profiles:
+            return
+
+        newest_mtime = max(p.stat().st_mtime for p in profiles)
+
         try:
             result = subprocess.run(
-                ["git", "submodule", "update", "--init", "--recursive", "--remote"],
+                [
+                    "systemctl", "--user", "show", "antimicrox",
+                    "--property=ActiveEnterTimestamp",
+                ],
                 capture_output=True,
                 text=True,
-                timeout=60
+                timeout=5,
+            )
+            if result.returncode != 0:
+                return
+
+            line = result.stdout.strip()
+            ts_str = line.split("=", 1)[1].strip()
+
+            if not ts_str or ts_str == "n/a":
+                # Service has never started successfully — restart now.
+                self._restart_antimicrox()
+                return
+
+            # Parse "Day YYYY-MM-DD HH:MM:SS UTC"
+            m = re.match(r"\w+ (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) UTC", ts_str)
+            if not m:
+                self.log.warning("antimicrox_timestamp_parse_error", timestamp=ts_str)
+                self._restart_antimicrox()
+                return
+
+            from datetime import datetime
+            dt = datetime.strptime(m.group(1), "%Y-%m-%d %H:%M:%S")
+            service_start_time = calendar.timegm(dt.timetuple())
+
+            if newest_mtime > service_start_time:
+                self._restart_antimicrox()
+
+        except Exception as e:
+            self.log.warning("antimicrox_check_error", error=str(e))
+
+    def _restart_antimicrox(self):
+        """Restart the antimicrox systemd user service and log the event."""
+        self._status("Restarting antimicrox (profile updated)...")
+        try:
+            result = subprocess.run(
+                ["systemctl", "--user", "restart", "antimicrox"],
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
             if result.returncode == 0:
-                self._status("Submodules updated")
+                self.log.info("antimicrox_restarted")
             else:
-                self._status(f"Submodule update failed: {result.stderr.strip()}")
-                self.log.warning("git_submodule_update_failed", stderr=result.stderr.strip())
-        except subprocess.TimeoutExpired:
-            self._status("Submodule update timed out")
-            self.log.warning("git_submodule_update_timeout")
+                self.log.warning("antimicrox_restart_failed", stderr=result.stderr.strip())
         except Exception as e:
-            self._status(f"Submodule update error: {e}")
-            self.log.error("git_submodule_update_error", error=str(e))
+            self.log.warning("antimicrox_restart_error", error=str(e))
 
     def check_terminal_size(self):
         """Check if terminal is large enough."""
@@ -114,6 +178,9 @@ class RetroConsoleApp:
 
         # Pull latest changes before discovering games
         self.pull_latest()
+
+        # Restart antimicrox if its profile has changed since last start
+        self.check_antimicrox_config()
 
         # Discover and validate games
         self._status("Discovering games...")

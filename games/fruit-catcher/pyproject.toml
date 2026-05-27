@@ -36,3 +36,4 @@ description = "Use your buttons to help the catcher catch the falling fruits. Do
 instructions = "SCore as many points as possible before losing by using the two designated buttons to move left and right."
 result_file = "result.json"
 log_file = "game.log"
+single_player = true

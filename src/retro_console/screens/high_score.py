@@ -14,12 +14,17 @@ KEYBOARD_ROWS = [
 
 
 class HighScoreScreen(Screen):
-    """Screen for entering initials for a high score."""
+    """Screen for entering initials for a high score.
+
+    Only the winning player's input is active.  winner is 1 or 2 (default 1).
+    """
 
     def __init__(self, app):
         super().__init__(app)
         self.game = app.pending_high_score["game"]
         self.score = app.pending_high_score["score"]
+        self.winner = app.pending_high_score.get("winner", 1)
+        self.player_prefix = f"P{self.winner}_"
         self.initials = ""
         self.cursor_row = 0
         self.cursor_col = 0
@@ -36,13 +41,22 @@ class HighScoreScreen(Screen):
         self.center_text(f"Game: {self.game.name}", 5)
         self.center_text(f"Score: {self.score}", 6)
 
+        # Active player indicator (only shown for two-player games)
+        if self.game.two_player:
+            self.center_text(f"Player {self.winner} — enter your initials", 8)
+            initials_y = 10
+            keyboard_y = 13
+        else:
+            initials_y = 9
+            keyboard_y = 12
+
         # Current initials
         initials_display = self.initials + "_" * (3 - len(self.initials))
-        self.center_text("Enter your initials:", 9)
-        self.center_text(t.bold + f"[ {initials_display} ]" + t.normal, 11)
+        self.center_text("Enter your initials:", initials_y)
+        self.center_text(t.bold + f"[ {initials_display} ]" + t.normal, initials_y + 2)
 
         # Virtual keyboard
-        self._draw_keyboard(14)
+        self._draw_keyboard(keyboard_y)
 
         # Instructions — buttons shown only when their action is available
         instructions = t.red + "[A] Select" + t.normal
@@ -74,11 +88,20 @@ class HighScoreScreen(Screen):
         return "game_select"
 
     def handle_input(self):
-        """Handle input for initial entry."""
+        """Handle input for initial entry.
+
+        Only accepts input from the winning player (self.player_prefix).
+        """
         while True:
             raw_key, logical_key = self.input_handler.read_key()
 
-            if logical_key == "UP":
+            # Ignore input from the other player
+            if logical_key is None or not logical_key.startswith(self.player_prefix):
+                continue
+
+            action = logical_key[len(self.player_prefix):]  # strip "P1_" or "P2_"
+
+            if action == "UP":
                 if self.cursor_row > 0:
                     old_row = self.cursor_row
                     self.cursor_row -= 1
@@ -86,7 +109,7 @@ class HighScoreScreen(Screen):
                     self.clear()
                     self.draw()
 
-            elif logical_key == "DOWN":
+            elif action == "DOWN":
                 if self.cursor_row < len(KEYBOARD_ROWS) - 1:
                     old_row = self.cursor_row
                     self.cursor_row += 1
@@ -94,32 +117,32 @@ class HighScoreScreen(Screen):
                     self.clear()
                     self.draw()
 
-            elif logical_key == "LEFT":
+            elif action == "LEFT":
                 if self.cursor_col > 0:
                     self.cursor_col -= 1
                     self.clear()
                     self.draw()
 
-            elif logical_key == "RIGHT":
+            elif action == "RIGHT":
                 row_len = len(KEYBOARD_ROWS[self.cursor_row])
                 if self.cursor_col < row_len - 1:
                     self.cursor_col += 1
                     self.clear()
                     self.draw()
 
-            elif logical_key == "A":
+            elif action == "A":
                 if len(self.initials) < 3:
                     self.initials += self._get_current_char()
                     self.clear()
                     self.draw()
 
-            elif logical_key == "B":
+            elif action == "B":
                 if self.initials:
                     self.initials = self.initials[:-1]
                     self.clear()
                     self.draw()
 
-            elif logical_key == "C":
+            elif action == "C":
                 if len(self.initials) == 3 and self._is_valid_initials():
                     return self._save_and_exit()
 
