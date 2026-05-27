@@ -85,12 +85,18 @@ class SoundManager:
 
     def _launch(self, sound_file: Path, soundfont: Path) -> subprocess.Popen | None:
         try:
+            cmd = ["fluidsynth", "-ni", "-r", "48000"]
+            if settings.FLUIDSYNTH_AUDIO_DRIVER:
+                cmd += ["-a", settings.FLUIDSYNTH_AUDIO_DRIVER]
+            cmd += [str(soundfont), str(sound_file)]
+            log.info("fluidsynth_launch", cmd=" ".join(cmd))
             proc = subprocess.Popen(
-                ["fluidsynth", "-ni", str(soundfont), str(sound_file)],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
             )
             self._process = proc
+            threading.Thread(target=self._log_output, args=(proc,), daemon=True).start()
             return proc
         except FileNotFoundError:
             log.error("fluidsynth_not_found")
@@ -98,6 +104,11 @@ class SoundManager:
         except Exception as e:
             log.error("fluidsynth_error", error=str(e))
             return None
+
+    def _log_output(self, proc: subprocess.Popen) -> None:
+        output = proc.stdout.read().decode(errors="replace").strip()
+        if output:
+            log.info("fluidsynth_output", output=output)
 
     def _loop_play(self, sound_file: Path, soundfont: Path) -> None:
         while not self._stop_loop.is_set():

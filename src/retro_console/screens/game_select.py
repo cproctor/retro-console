@@ -2,7 +2,7 @@
 
 from retro_console import settings
 from retro_console.screens.base import Screen
-from retro_console.game_manager import run_game
+from retro_console.game_manager import run_game, discover_games, register_games
 
 
 class GameSelectScreen(Screen):
@@ -118,7 +118,7 @@ class GameSelectScreen(Screen):
 
         # Instructions at bottom
         t = self.terminal
-        print(self.move(x, self.height - 2) + t.red + "[A] Play" + t.normal + "  [UP/DOWN] Select")
+        print(self.move(x, self.height - 2) + t.red + "[A] Play" + t.normal + "  [UP/DOWN] Select  [B] Refresh")
 
     def _wrap_text(self, text, width):
         """Simple word wrapping."""
@@ -169,6 +169,22 @@ class GameSelectScreen(Screen):
             elif logical_key == "A":
                 if self.games:
                     return self._play_selected_game()
+
+            elif logical_key == "B":
+                self._refresh_games()
+                self.clear()
+                self.draw()
+
+    def _refresh_games(self):
+        """Re-scan the games directory and update the list."""
+        self.clear()
+        self.center_text("Scanning for games...", self.height // 2)
+        valid_games, _ = discover_games()
+        register_games(valid_games, self.app.session)
+        self.app.refresh_games()
+        self.games = self.app.games
+        if self.selected_index >= len(self.games):
+            self.selected_index = max(0, len(self.games) - 1)
 
     def _play_selected_game(self):
         """Play the selected game and handle the result."""
